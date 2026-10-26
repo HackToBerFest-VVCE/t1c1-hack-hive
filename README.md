@@ -3,221 +3,228 @@
 [![Hacktoberfest](https://img.shields.io/badge/Event-Hacktoberfest_VVCE_Mysuru-0284c7.svg)](https://github.com/HackToBerFest-VVCE/t1c1-hack-hive)
 [![Challenge Track](https://img.shields.io/badge/Track-Best_Use_of_Gemma_4-38bdf8.svg)](https://github.com/HackToBerFest-VVCE/t1c1-hack-hive)
 [![Frontend](https://img.shields.io/badge/Frontend-React_18_%7C_Vite_6-61dafb.svg)](https://react.dev/)
-[![Styling](https://img.shields.io/badge/Styling-Custom_Navy_Design_System-0b1329.svg)](file:///D:/LabSense%20AI/src/App.css)
-[![Build Status](https://img.shields.io/badge/Build-Passing-10b981.svg)](file:///D:/LabSense%20AI/dist/)
+[![Styling](https://img.shields.io/badge/Styling-Custom_Navy_Design_System-0b1329.svg)](src/App.css)
+[![Build Status](https://img.shields.io/badge/Build-Passing-10b981.svg)](dist/)
 
-LabSense AI is an AI-powered electronics laboratory learning platform designed to help engineering students investigate circuit faults, understand experimental results, and master systematic troubleshooting on physical hardware breadboards.
+**LabSense AI** is an AI-powered electronics laboratory learning and institutional management platform. It empowers engineering students to investigate physical breadboard circuit faults, analyze bench telemetry, and master systematic troubleshooting through multimodal reasoning inspired by Google Gemma 4.
 
-Developed for the **"Best Use of Gemma 4"** track at Hacktoberfest (VVCE Mysuru), the platform provides distinct portals for students and instructors, interactive circuit simulations, an experiment curriculum library, and an evidence-based circuit diagnosis workbench.
+Developed for the **"Best Use of Gemma 4"** track at Hacktoberfest (VVCE Mysuru), the platform combines role-based laboratory portals, institution workspace isolation with unique codes, interactive circuit simulations, curriculum authoring benches, and evidence-based diagnostic reports.
 
 ---
 
 ## 1. Problem Statement
 
 Undergraduate engineering students frequently encounter obstacles when troubleshooting physical circuits on laboratory breadboards:
-- **Difficult Fault Localization:** Misplaced jumper wires, inverted polarity components (diodes, LEDs, electrolytic capacitors), or IC pin miscounts are hard to detect from static manuals.
-- **Ambiguous Multimeter Telemetry:** Students often cannot distinguish between expected voltage drops and fault-induced anomalies.
-- **Hardware Burnout & Safety Risks:** Overcurrent conditions and missing current-limiting resistors lead to burnt components and lost bench time.
-- **Instructor Bottlenecks:** A single laboratory instructor must supervise 30–60 students simultaneously, creating delays in verifying experimental steps and signing off reports.
+- **Difficult Fault Localization:** Misplaced jumper wires, inverted polarity components (diodes, LEDs, electrolytic capacitors), and IC pin miscounts are difficult to detect from static printed manuals.
+- **Ambiguous Multimeter Telemetry:** Students often struggle to distinguish between expected component voltage drops, floating inputs, and fault-induced anomalies.
+- **Hardware Burnout & Safety Risks:** Overcurrent loops and omitted current-limiting resistors cause component damage, instrument fuse trips, and bench downtime.
+- **Supervision Bottlenecks:** A single laboratory instructor must supervise 30–60 students simultaneously, creating delays in verifying steps, debugging circuits, and assessing progress.
+- **Institutional Fragmentation:** Academic institutions lack unified digital infrastructure to track hardware experiments, issue standardized lab codes, manage cohort rosters, and author curriculum modules.
 
 ---
 
-## 2. Project Overview & Solution
+## 2. Project Overview & Proposed Solution
 
-LabSense AI bridges physical breadboard work with AI-guided troubleshooting. Students upload a photograph of their physical circuit, input their observed symptoms and bench telemetry (supply voltage, measured voltage, circuit current), and receive an 8-section evidence-based diagnostic report powered by Gemma 4 multimodal reasoning principles.
-
-The platform provides two primary user experiences:
-1. **Student Learning Portal:** Circuit troubleshooting, experiment curriculum library, interactive physical simulations, theoretical assessments, faculty inquiry submissions, and verified lab progress tracking.
-2. **Instructor & Faculty Portal:** Curriculum experiment designer, student question inbox, classroom demonstration simulations, assessment test authoring, and student cohort progress monitoring.
+LabSense AI bridges hands-on bench experiments with systematic AI guidance:
+1. **Multimodal Circuit Understanding:** Students capture their physical breadboard layout, specify live bench measurements ($V_{supply}$, $V_{measured}$, $I_{circuit}$), and describe observed symptoms.
+2. **Evidence-Based Diagnostic Engine:** The system generates an 8-section structured troubleshooting report providing physical observations, fault hypotheses with likelihood ratings, supporting evidence, step-by-step verification tests, expected nominal readings, corrective steps, and safety warnings.
+3. **Four-Role Institutional Hierarchy:** Supports distinct workflows for **Students**, **Instructors**, **Institution Admins**, and **Platform Super Admins** with dedicated dashboards and permissions.
+4. **Campus Workspace Isolation:** Educational institutions register to receive unique institution codes (e.g. `LSAI-VVCE-A7K2`), which students and faculty use to join isolated departmental workspaces.
+5. **Interactive Physics Simulations:** Five mathematical simulation engines allow real-time parameter tweaking and bench comparison before wiring physical hardware.
 
 > [!NOTE]
 > **Implementation Status & Demonstration Mode:**
-> This repository contains the complete frontend platform with working client-side navigation, interactive physics simulations, and a local deterministic diagnostic engine that simulates Gemma 4 troubleshooting outputs when the backend is offline. Live Gemma 4 API calls and remote Supabase persistence are planned for subsequent integration milestones.
+> The frontend provides complete client-side navigation, role-based workflows, interactive simulations, and a local deterministic diagnostic engine that simulates Gemma 4 troubleshooting outputs when the backend is offline. Local demonstration state is managed via `localStorage` (`labsense_local_session`). An optional FastAPI backend is present in `backend/` with verified unit tests, and Supabase database schemas are prepared in `supabase/` for production cloud deployment.
 
 ---
 
-## 3. Main Features
+## 3. Core Gemma-Powered Diagnostic Capabilities
 
-- **Professional Engineering Design System:** Deep-navy background (`#070d1e`), high-contrast readable typography (17–18px body, 40–48px hero), transparent cyan navigation (`#38bdf8`), and responsive layouts across desktop, tablet, and mobile.
-- **Multimodal Circuit Troubleshooting Workbench:** File ingestion supporting JPEG, PNG, and WebP formats up to 10 MB, telemetry input validation, and real-time report generation.
-- **8-Section Diagnostic Report:** Systematic engineering feedback covering physical layout observations, potential faults with likelihood ratings, supporting evidence, step-by-step verification tests, expected results, corrective wiring actions, and hardware safety rules.
-- **Dual Role Access:** Instant role switcher modal allowing seamless evaluation between Student and Instructor modes without requiring passcodes in demonstration mode.
-- **Local Simulation Fallback:** Deterministic client-side calculations ensuring all features remain responsive and testable even without an active internet connection or backend server.
-- **Gemma 4 Architecture Deep-Dive:** Dedicated modal showcasing multimodal prompt composition, image preprocessing, and safety protocol pipelines.
+The platform models Google Gemma 4 multimodal reasoning principles across five diagnostic vectors:
 
----
+1. **Physical Layout Understanding:** Ingests breadboard photographs (JPEG/PNG/WebP up to 10 MB) to inspect jumper rails, component orientations, and power buses.
+2. **Telemetry Validation (Expected vs. Actual):** Compares reported multimeter voltages and currents against calculated theoretical operating points, flagging excessive resistance or short circuits.
+3. **Prioritized Fault Hypotheses:** Ranks potential faults (High, Medium, Low likelihood) with explicit evidence citations.
+4. **Step-by-Step Multimeter Verification Tests:** Formulates practical probe instructions (probe points, multimeter switch mode, expected readings, and de-energizing safety rules) to confirm faults before touching components.
+5. **Instructional Question Answering:** Provides faculty with Gemma co-pilot drafting tools to compose technical replies for student inquiry tickets and generate objective assessment items.
 
-## 4. Student Features
-
-1. **AI Circuit Troubleshooting:** Staging workbench to upload physical breadboard photographs, record voltage/current readings, and inspect systematic diagnosis reports.
-2. **Experiment Library:** Curated catalog of electronics experiments with difficulty tags, circuit schematics, pinout diagrams, component lists, and step-by-step laboratory procedures.
-3. **Interactive Circuit Simulations:** Five physics-driven simulation models with real-time sliders and instant telemetry updates.
-4. **My Assessments:** Objective theoretical quizzes with instant client-side grading, score summaries, and question-by-question explanations.
-5. **Ask an Instructor:** Form to draft technical questions linked to specific experiments with symptom descriptions and simulated instructor threads.
-6. **My Progress:** Dashboard showing completed laboratory modules, instructor sign-off records, assessment scores, and active ticket statuses.
-
----
-
-## 5. Instructor Features
-
-1. **Experiment Designer:** Authoring tool for faculty to create multi-step laboratory procedures, define expected telemetry tolerances, list required components, and set safety rules.
-2. **Student Question Inbox:** Inquiry triage system displaying student questions, priority tags, experiment context, and response drafting tools.
-3. **Classroom Circuit Simulations:** Full access to interactive circuit simulations for lecture demonstrations and parameter validation.
-4. **Test Designer:** Assessment authoring tool to create multiple-choice questions with answer keys and instructional feedback.
-5. **Student Progress Analytics:** Cohort-wide overview tracking laboratory sign-offs, assessment score averages, and pending student submissions.
-
----
-
-## 6. Circuit Troubleshooting Workflow
+### Troubleshooting Diagnostic Workflow
 
 ```
 [Physical Breadboard] ──> [Capture Photo] ──> [Multimeter Telemetry]
                                                       │
                                                       ▼
 [Client-Side Validation] ──> [Gemma 4 Multimodal Analysis] ──> [8-Section Diagnostic Report]
-                                                                      │
-                                   ┌──────────────────────────────────┴──────────────────────────────────┐
-                                   ▼                                                                     ▼
-                       1. Layout Observations                                                5. Verification Tests
-                       2. Potential Faults & Likelihood                                      6. Expected Observations
-                       3. Supporting Telemetry Evidence                                      7. Corrective Wiring Steps
-                       4. Ambiguities / Missing Data                                         8. Safety Precautions
+                                                                       │
+                                    ┌──────────────────────────────────┴──────────────────────────────────┐
+                                    ▼                                                                     ▼
+                        1. Layout Observations                                                5. Verification Tests
+                        2. Potential Faults & Likelihood                                      6. Expected Observations
+                        3. Supporting Telemetry Evidence                                      7. Corrective Wiring Steps
+                        4. Ambiguities / Missing Data                                         8. Safety Precautions
 ```
 
-1. **Upload Circuit Photo:** Drag and drop or browse a breadboard photo (JPEG/PNG/WebP, max 10 MB). The client automatically validates dimensions and file size.
-2. **Record Bench Readings:** Enter optional multimeter measurements:
-   - Supply Voltage ($V_{cc}$ in Volts, e.g., `5.0 V`)
-   - Measured Voltage ($V_{out}$ or $V_{drop}$ in Volts, e.g., `1.84 V`)
-   - Measured Circuit Current ($I$ in milliamperes, e.g., `18.4 mA`)
-3. **Describe Symptoms:** State the observed behavior vs. expected behavior (e.g., *"LED does not illuminate when 5V supply is switched on"*).
-4. **Inspect Diagnosis:** Receive prioritized fault hypotheses (e.g., reversed diode polarity, breadboard power bus split, excessive series resistance) with step-by-step multimeter verification tests.
+---
+
+## 4. Role-Based Architecture & Portals
+
+The application features a four-tier role access model with dynamic header profile rendering and context-driven portal routing:
+
+### 1. Student Learning Portal
+- **Circuit Troubleshooter:** Physical circuit photo staging, multimeter measurement input, and 8-section diagnostic feedback.
+- **Experiment Curriculum Catalog:** Built-in repository of electronics experiments with difficulty tags, circuit schematics, pinouts, and procedures.
+- **Circuit Simulations:** Interactive parameter sliders and real-time telemetry gauges.
+- **Assessments & Quizzes:** Multiple-choice practical evaluations with instant client-side grading and answer rationale.
+- **Ask an Instructor:** Inquiry submission form linked to specific experiments with status tracking.
+- **My Progress:** Completion records, sign-off logs, assessment scores, and ticket tracking.
+- **Student Scope Banner:** Displays student name, USN (`4VV21EC042`), semester (`6th Semester`), institution, and enrolled lab courses.
+
+### 2. Instructor & Faculty Portal
+- **Experiment Designer:** Authoring bench to compose laboratory modules, define component lists, specify expected readings, and attach safety rules.
+- **Student Question Inbox:** Inquiry triage system with experiment context, student measurements, and Gemma AI-assisted reply drafting.
+- **Simulations Sandbox:** Full access to interactive circuit simulations for classroom demonstrations.
+- **Test Designer:** Assessment creation tool with AI-assisted question drafting, option management, and answer key generation.
+- **Student Progress Analytics:** Cohort performance tracking, module completion rates, and average quiz scores.
+- **Faculty Scope Banner:** Displays faculty name (`Dr. K. S. Sharma`), staff ID (`VVCE-FAC-ECE-108`), department, and assigned courses.
+- **Crash-Resilient Rendering:** Protected with safe property fallbacks and an Error Boundary to prevent white-screen crashes.
+
+### 3. Institution Admin Dashboard
+- **Campus Workspace Overview:** Departmental metrics, student count (842), active faculty (28), and laboratory utilization rates.
+- **Institution Code Distribution:** Active code management (`LSAI-VVCE-A7K2`), one-click copying, and regeneration controls.
+- **Department & Lab Management:** Laboratory facility configuration, equipment allocation, and bench limits.
+- **Faculty & Student Rosters:** Directory of enrolled learners and laboratory coordinators with status badges.
+- **Administrative Logs:** Audit trail of user registrations, code redemptions, and workspace events.
+
+### 4. Platform Super Admin Governance
+- **Global Multi-Tenant Metrics:** Platform-wide oversight (14 institutions, 12,840 students, 486 instructors).
+- **Institution Governance:** Multi-campus directory, subscription tier monitoring, and workspace status toggling.
+- **Model & Diagnostic Settings:** Configuration of active Gemma AI inference models, temperature parameters, and rate limits.
+- **Platform Health & Audit Logs:** System status telemetry, API endpoint latency monitors, and security audit records.
 
 ---
 
-## 7. Experiment Library
+## 5. Header Profile & Account Access Experience
 
-The built-in curriculum library includes standard undergraduate electronics experiments:
-
-| Code | Experiment Title | Category | Difficulty | Key Concepts |
-| :--- | :--- | :--- | :--- | :--- |
-| **EXP-01** | Inverting Operational Amplifier | Analog Circuits | Intermediate | Closed-loop gain $A_v = -R_f / R_{in}$, virtual ground, phase inversion |
-| **EXP-02** | Full-Wave Bridge Rectifier | Power Electronics | Beginner | Diode forward conduction, ripple factor, capacitive filtering |
-| **EXP-03** | 555 Timer Astable Multivibrator | Timing & Pulse | Intermediate | Charge/discharge timing, frequency $f = \frac{1.44}{(R_1 + 2R_2)C}$, duty cycle |
-| **EXP-04** | BJT Common Emitter Amplifier | Transistor Circuits | Advanced | Active mode DC biasing, voltage gain, small-signal $h_{fe}$ |
-| **EXP-05** | Passive R-C Low-Pass Filter | Filter Design | Beginner | Cutoff frequency $f_c = \frac{1}{2\pi RC}$, attenuation, $-3\text{ dB}$ roll-off |
-| **EXP-06** | Linear Voltage Regulator (7805) | Power Supplies | Beginner | Line and load regulation, dropout voltage, thermal dissipation |
-| **EXP-07** | Voltage Divider Network | Fundamentals | Beginner | Kirchhoff's laws, impedance matching, loading effect |
-| **EXP-08** | Arduino Sensor Interfacing | Microcontrollers | Intermediate | ADC resolution, voltage dividers, analog-to-digital conversion |
-
----
-
-## 8. Interactive Circuit Simulations
-
-The platform includes five client-side deterministic physics simulation engines:
-
-1. **Ohm's Law Engine:** Dynamically calculates current ($I = V/R$) and power dissipation ($P = V \times I$), warning when component power ratings ($0.25\text{ W}$) are exceeded.
-2. **Diode Forward Bias Model:** Implements exponential Shockley diode modeling ($I \approx I_s e^{V_d / n V_t}$) and current-limiting resistor load lines.
-3. **R-C Low-Pass Filter:** Computes cut-off frequency $f_c$, gain in decibels ($\text{dB}$), and output amplitude across adjustable test frequencies.
-4. **555 Timer Frequency Synthesizer:** Calculates high time ($t_{high}$), low time ($t_{low}$), oscillation frequency, and duty cycle based on $R_1$, $R_2$, and $C_1$.
-5. **Inverting Op-Amp Stage:** Computes closed-loop voltage gain, theoretical output voltage, and indicates rail-to-rail saturation against supply limits.
-
-Each simulation features:
-- Interactive range sliders with numeric value readouts.
-- Live telemetry stat boxes.
-- Relevant mathematical formulas and governing equations.
-- Physical bench comparison tool to cross-reference multimeter measurements against theoretical predictions.
+- **Logged-Out State:** Displays a single, clear **"Log In / Sign Up"** button on the dark navy header with transparent cyan navigation.
+- **Logged-In State:** Replaces the login button with:
+  - User name and avatar initials
+  - Role-specific icon and badge (Student, Faculty Instructor, Institution Admin, Platform Super Admin)
+  - Profile dropdown menu with **My Profile**, **My Dashboard**, **Account Settings**, and **Log Out**
+- **Unified Account Access Modal:**
+  - **Hub:** Direct entry paths for Institution Registration, User Sign Up, and User Login.
+  - **Register Institution:** Form for colleges/universities to register, create admin credentials, and receive an instant unique institution code.
+  - **Sign Up:** User enrollment with full name, email, password, role selection, and institution code verification.
+  - **Log In:** Credential authentication with automated routing to the appropriate role dashboard.
+  - **Quick Evaluation Personas:** Instant one-click demo switching between all 4 roles for demonstration and evaluation.
 
 ---
 
-## 9. Assessments and Student Progress
+## 6. React Error Boundary & Crash Resilience
 
-- **Interactive Assessments:** Students take objective theoretical evaluations with questions on circuit operation, diode ratings, and oscilloscope interpretation.
-- **Client-Side Grading:** Immediate grading upon submission with detailed explanations for correct and incorrect answers.
-- **Student Progress Dashboard:** Tracks completed modules, signed-off experiments, assessment scores, and active instructor inquiries.
-
----
-
-## 10. Instructor Experiment and Test Design
-
-- **Curriculum Authoring:** Instructors can author new laboratory experiments with custom titles, categories, difficulty levels, required components, step-by-step procedures, and safety notices.
-- **Test Authoring:** Instructors can design multiple-choice quiz questions, define answer choices, designate the correct key, and provide educational rationale.
-- **Question Inbox Management:** Instructors can view student questions, filter by status, and draft technical replies.
+To ensure maximum reliability during laboratory sessions, the application wraps all portal views with a class-based `ErrorBoundary` component (`src/components/ErrorBoundary.jsx`):
+- Catches unhandled JavaScript exceptions during component rendering.
+- Prevents white-screen unmounting of the root application.
+- Displays a themed dark-navy notification card with the error message.
+- Provides a **"Retry View"** action to reset state and a **"Return to Home"** button for instant recovery.
 
 ---
 
-## 11. Actual Technology Stack
+## 7. Interactive Circuit Simulation Models
+
+The platform features five client-side deterministic physics simulation models in `StudentSimulations.jsx`:
+
+| Simulation Model | Key Formulas | Adjustable Controls | Real-Time Telemetry |
+| :--- | :--- | :--- | :--- |
+| **Ohm's Law Engine** | $I = \frac{V}{R}$, $P = V \times I$ | Supply Voltage ($0.5\text{--}24\text{ V}$), Resistance ($10\,\Omega\text{--}10\text{ k}\Omega$) | Current (mA), Power (mW), Over-wattage alert ($>250\text{ mW}$) |
+| **Diode Forward Bias** | $I \approx I_s e^{V_d / n V_t}$ | Supply Voltage ($0\text{--}12\text{ V}$), Series Resistor ($100\,\Omega\text{--}2.2\text{ k}\Omega$) | Diode Drop ($V_d \approx 0.7\text{ V}$), Forward Current, Conduction status |
+| **RC Low-Pass Filter** | $f_c = \frac{1}{2\pi RC}$, Gain $(\text{dB}) = 20\log_{10}\left(\frac{1}{\sqrt{1 + (f/f_c)^2}}\right)$ | Resistance ($100\,\Omega\text{--}100\text{ k}\Omega$), Capacitance ($1\text{ nF}\text{--}100\,\mu\text{F}$), Test Frequency | Cut-off $f_c$, Attenuation (dB), Output Amplitude, $-3\text{ dB}$ status |
+| **555 Timer Astable** | $f = \frac{1.44}{(R_1 + 2R_2)C}$, Duty $= \frac{R_1 + R_2}{R_1 + 2R_2} \times 100\%$ | $R_1$ ($1\text{ k}\Omega\text{--}100\text{ k}\Omega$), $R_2$ ($1\text{ k}\Omega\text{--}100\text{ k}\Omega$), Timing Cap $C$ | Oscillation Frequency (Hz), High Time ($t_h$), Low Time ($t_l$), Duty Cycle |
+| **Inverting Op-Amp** | $A_v = -\frac{R_f}{R_{in}}$, $V_{out} = A_v \times V_{in}$ | Input Voltage, $R_{in}$ ($1\text{ k}\Omega\text{--}50\text{ k}\Omega$), $R_f$ ($1\text{ k}\Omega\text{--}200\text{ k}\Omega$), Supply Rails | Closed-loop gain, Theoretical $V_{out}$, Rail-to-rail saturation indicator |
+
+---
+
+## 8. Technology Stack
 
 ### Frontend (Verified & Operational)
 - **Framework:** React 18 (`react` 18.3.1, `react-dom` 18.3.1)
-- **Build Tool:** Vite 6 (`vite` 6.1.0, `@vitejs/plugin-react` 4.3.4)
-- **Language:** JavaScript (ES Modules)
-- **Design System:** Custom CSS3 (`src/App.css`, ~3,300 lines) with Deep Navy palette (`#070d1e`, `#0b1329`, `#101c3d`), responsive grids, and accessible typography.
+- **Build Tool:** Vite 6 (`vite` 6.4.5, `@vitejs/plugin-react` 4.3.4)
+- **Language:** JavaScript (ES Modules, JSX)
+- **Design System:** Custom CSS3 (`src/App.css`, ~4,500 lines) with Deep Navy palette (`#070d1e`, `#0b1329`, `#101c3d`), transparent cyan navigation (`#38bdf8`), and responsive layouts.
 - **Iconography:** Lucide React (`lucide-react` 0.475.0)
-- **Client State:** React Context API (`AuthContext.jsx`) for role management and session handling.
-- **Local Physics Engine:** Deterministic mathematics in `StudentSimulations.jsx` and fallback diagnosis generator in `App.jsx`.
+- **Client State:** React Context API (`AuthContext.jsx`) with `localStorage` session persistence (`labsense_local_session`).
+- **Resilience:** React Error Boundary (`src/components/ErrorBoundary.jsx`).
 
-### Backend (Verified Optional Component)
+### Backend Architecture (Verified Optional Component)
 - **Framework:** FastAPI (`backend/main.py`)
-- **Validation:** Pydantic (`backend/models/schemas.py`)
-- **Test Suite:** 8 passing automated unit tests in `backend/tests/run_tests.py` verifying health, simulation calculations, and schemas.
+- **Data Validation:** Pydantic (`backend/models/schemas.py`)
+- **Router Endpoints:** Circuit troubleshooting (`/troubleshoot`), simulations (`/simulations`), experiments (`/experiments`), assessments (`/assessments`), questions (`/questions`), and auth (`/auth`).
+- **Services:** Local simulation calculation engine and Gemma reasoning service pipelines.
+- **Automated Tests:** 8 passing tests in `backend/tests/run_tests.py`.
 
-### Planned Integrations
-- **AI Model:** Google Gemma 4 Multimodal Models (`gemma-4-31b-it`, `gemma-4-26b-a4b-it`) via Gemini / Google AI API.
-- **Database:** Supabase PostgreSQL (schema and migrations defined in `supabase/migrations/001_initial_schema.sql`).
+### Database & Auth Architecture (Prepared for Cloud Deployment)
+- **Database Engine:** PostgreSQL via Supabase.
+- **Schema & Migrations:** Full SQL schema in `supabase/migrations/001_initial_schema.sql` defining tables for institutions, profiles, user roles, experiments, student enrollments, assessments, test attempts, and inquiry tickets.
+- **Seed Data:** `supabase/seed.sql` with sample curriculum and institutional records.
+- **Current Runtime Status:** Client library configured in `src/lib/supabase.js`. Operates in offline local demo mode when Supabase environment variables are unpopulated.
 
 ---
 
-## 12. Project Architecture
+## 9. Project Folder Structure
 
 ```
 LabSense AI/
 ├── public/
-│   ├── favicon.svg                   # Circuit / IC brand favicon
+│   ├── favicon.svg                   # Brand circuit favicon
 │   └── icons.svg
 ├── src/
 │   ├── components/
+│   │   ├── admin/
+│   │   │   └── InstitutionAdminDashboard.jsx  # Institution workspace & roster admin
 │   │   ├── instructor/
-│   │   │   ├── InstructorExperiments.jsx  # Authoring interface for lab modules
-│   │   │   ├── InstructorPortal.jsx       # Instructor dashboard layout & tabs
-│   │   │   ├── InstructorProgress.jsx     # Cohort analytics & grading ledger
-│   │   │   ├── InstructorQuestions.jsx    # Student question inbox & triage
-│   │   │   └── InstructorTests.jsx        # Assessment test authoring tool
+│   │   │   ├── InstructorExperiments.jsx      # Authoring bench for lab experiments
+│   │   │   ├── InstructorPortal.jsx           # Instructor dashboard & navigation
+│   │   │   ├── InstructorProgress.jsx         # Cohort analytics & sign-offs
+│   │   │   ├── InstructorQuestions.jsx        # Question inbox & AI drafting
+│   │   │   └── InstructorTests.jsx            # Assessment test authoring tool
 │   │   ├── student/
-│   │   │   ├── StudentAssessments.jsx     # Multiple-choice quiz interface
-│   │   │   ├── StudentExperiments.jsx     # Experiment curriculum catalog
-│   │   │   ├── StudentPortal.jsx          # Student navigation & 6 portal tabs
-│   │   │   ├── StudentProgress.jsx        # Student completion & sign-off records
-│   │   │   ├── StudentQuestions.jsx       # Inquiry drafting form & ticket threads
-│   │   │   ├── StudentSimulations.jsx     # 5 interactive circuit simulation models
-│   │   │   └── StudentTroubleshoot.jsx    # Diagnostic bench wrapper
-│   │   ├── AuthModal.jsx             # Role switcher modal (Student / Instructor)
+│   │   │   ├── StudentAssessments.jsx         # Multiple-choice quiz interface
+│   │   │   ├── StudentExperiments.jsx         # Experiment curriculum catalog
+│   │   │   ├── StudentPortal.jsx              # Student 6-tab navigation layout
+│   │   │   ├── StudentProgress.jsx            # Student completion records
+│   │   │   ├── StudentQuestions.jsx           # Inquiry drafting form
+│   │   │   ├── StudentSimulations.jsx         # 5 physics simulation engines
+│   │   │   └── StudentTroubleshoot.jsx        # Breadboard diagnosis workbench
+│   │   ├── superadmin/
+│   │   │   └── SuperAdminDashboard.jsx        # Global governance & metrics
+│   │   ├── AuthModal.jsx             # Unified account access & registration modal
 │   │   ├── DiagnosisPanel.jsx        # 8-section diagnostic results panel
-│   │   ├── ExperimentForm.jsx        # Category selector, description & telemetry
-│   │   ├── Footer.jsx                # Branded footer, challenge info & safety notice
-│   │   ├── Header.jsx                # Top bar with transparent cyan nav & profile
-│   │   ├── Hero.jsx                  # 2-column hero with schematic & safety chips
-│   │   ├── HowGemmaWorks.jsx         # Architecture modal & prompt design breakdown
-│   │   ├── HowItWorks.jsx            # 3-step overview section
-│   │   └── ImageUpload.jsx           # Drag-and-drop circuit photo ingestion
+│   │   ├── ErrorBoundary.jsx         # Component error catcher & recovery card
+│   │   ├── ExperimentForm.jsx        # Circuit description & telemetry form
+│   │   ├── Footer.jsx                # Branded footer & hardware safety notices
+│   │   ├── Header.jsx                # Navy header with cyan nav & user profile
+│   │   ├── Hero.jsx                  # Hero section with workbench CTA
+│   │   ├── HowGemmaWorks.jsx         # Gemma 4 multimodal architecture modal
+│   │   ├── HowItWorks.jsx            # 3-step workflow overview
+│   │   └── ImageUpload.jsx           # Circuit photo ingestion & validation
 │   ├── context/
-│   │   └── AuthContext.jsx           # Role state provider & demo switcher
+│   │   └── AuthContext.jsx           # Multi-role authentication & session provider
 │   ├── lib/
-│   │   ├── api.js                    # API client with offline fallback handling
+│   │   ├── api.js                    # API client with fallback report generation
 │   │   └── supabase.js               # Supabase client configuration
 │   ├── App.css                       # Complete design system & responsive styling
 │   ├── App.jsx                       # Root view router & diagnosis handler
 │   └── main.jsx                      # React application mount
-├── backend/                          # Optional FastAPI backend server
-│   ├── config.py                     # Environment configuration
+├── backend/                          # Optional FastAPI backend
+│   ├── config.py                     # Backend environment configuration
 │   ├── main.py                       # FastAPI application entry
 │   ├── models/schemas.py             # Pydantic schemas
-│   ├── routers/                      # API endpoints (troubleshoot, simulations, etc.)
-│   ├── services/                     # Gemma 4 & physics simulation engines
-│   └── tests/                        # 8 automated verification tests
-├── supabase/
-│   ├── migrations/                   # PostgreSQL schema migrations
-│   └── seed.sql                      # Seed data for curriculum & experiments
-├── .env.example                      # Safe environment variable template
+│   ├── routers/                      # API endpoint modules
+│   ├── services/                     # Simulation & Gemma services
+│   └── tests/                        # Automated unit tests
+├── supabase/                         # Database resources
+│   ├── migrations/                   # PostgreSQL schema definitions
+│   └── seed.sql                      # Curriculum & institution seed data
+├── .env.example                      # Environment variables template
 ├── .gitignore                        # Git exclusion rules
 ├── index.html                        # HTML5 document entry
 ├── package.json                      # Project dependencies & scripts
@@ -227,16 +234,15 @@ LabSense AI/
 
 ---
 
-## 13. Prerequisites
+## 10. Installation and Local Setup
 
+### Prerequisites
 - **Node.js:** v18.0.0 or higher (Tested on Node.js v22.16.0)
 - **npm:** v9.0.0 or higher (Tested on npm v10.9.2)
-- **Modern Web Browser:** Google Chrome, Microsoft Edge, Mozilla Firefox, or Apple Safari
-- *(Optional for backend):* Python 3.10 or higher with `pip`
+- **Modern Web Browser:** Chrome, Edge, Firefox, or Safari
+- *(Optional for backend):* Python 3.10+ with `pip`
 
----
-
-## 14. Installation and Local Setup
+### Step-by-Step Instructions
 
 1. **Clone the repository:**
    ```bash
@@ -249,40 +255,34 @@ LabSense AI/
    npm install
    ```
 
-3. **Configure environment variables (Optional):**
+3. **Configure Environment Variables (Optional):**
    Copy `.env.example` to `.env`:
    ```bash
    cp .env.example .env
    ```
    *(Note: The frontend operates fully in local demonstration mode without external API keys).*
 
----
-
-## 15. Running the Frontend
-
-To start the Vite development server:
-
-```bash
-npm run dev
-```
-
-The application will be available at:
-```
-http://localhost:5173
-```
+4. **Start the Vite development server:**
+   ```bash
+   npm run dev
+   ```
+   The application will run at:
+   ```
+   http://localhost:5173
+   ```
 
 ---
 
-## 16. Optional Backend Setup (Verified)
+## 11. Optional Backend Setup (Verified)
 
-To run the optional FastAPI backend server:
+To run the optional FastAPI backend:
 
 1. **Install Python dependencies:**
    ```bash
    pip install fastapi uvicorn pydantic python-dotenv
    ```
 
-2. **Run backend verification tests:**
+2. **Run verification test suite:**
    ```bash
    python backend/tests/run_tests.py
    ```
@@ -292,13 +292,13 @@ To run the optional FastAPI backend server:
    ```bash
    uvicorn backend.main:app --reload --port 8000
    ```
-   The backend API documentation will be available at `http://localhost:8000/docs`.
+   Interactive Swagger documentation will be available at `http://localhost:8000/docs`.
 
 ---
 
-## 17. Environment Variables
+## 12. Environment Variables
 
-The project includes `.env.example` as a template:
+The project includes `.env.example` as a template for production deployment:
 
 ```env
 # LabSense AI - Environment Configuration Template
@@ -310,46 +310,47 @@ VITE_GEMMA_API_KEY=your_gemma_api_key_placeholder
 ```
 
 > [!IMPORTANT]
-> Never commit real API keys, passwords, or service credentials to version control. The repository `.gitignore` automatically excludes all `.env` files.
+> Never commit real API keys, passwords, or service-role credentials to version control. The repository `.gitignore` automatically excludes all `.env` and credential files.
 
 ---
 
-## 18. Build and Testing Instructions
+## 13. Build and Quality Validation
 
-1. **Build for Production:**
+1. **Production Build:**
    ```bash
    npm run build
    ```
-   *Compiles production-ready minified assets into the `dist/` directory.*
+   *Compiles production-ready minified assets into `dist/` with zero errors.*
 
-2. **Preview Production Build:**
-   ```bash
-   npm run preview
-   ```
-
-3. **Git Diff and Syntax Check:**
+2. **Git Diff and Whitespace Check:**
    ```bash
    git diff --check
    ```
 
+3. **Preview Production Build:**
+   ```bash
+   npm run preview
+   ```
+
 ---
 
-## 19. Current Limitations & Planned Integrations
+## 14. Current Implementation Status & Roadmap
 
-| Feature | Current Status | Planned Evolution |
+| Platform Feature | Current Implementation Status | Production Roadmap |
 | :--- | :--- | :--- |
-| **Gemma 4 Multimodal AI** | Simulated locally via deterministic diagnostic engine | Live API connection to `gemma-4-31b-it` via Google AI / Gemini API |
-| **User Authentication** | Demo role switcher (Student / Instructor) with local state | Remote Supabase Auth (OAuth, Email/Password, Role-based JWTs) |
-| **Data Persistence** | Browser session & local state storage | Supabase PostgreSQL persistent tables with Row-Level Security (RLS) |
-| **Hardware Troubleshooting** | Image upload, measurements form, 8-section report | Live webcam inspection, real-time bounding box defect detection |
-| **Circuit Simulations** | 5 client-side deterministic models | SPICE-based engine with transient and AC sweep graphs |
+| **Gemma 4 Multimodal AI** | Simulated locally via deterministic diagnostic engine and fallback rules | Live API connection to `gemma-4-31b-it` via Google AI / Vertex API |
+| **Authentication & Roles** | Multi-role demo engine (Student, Instructor, Admin, Super Admin) with `localStorage` | Supabase Auth with Row-Level Security (RLS) and JWT verification |
+| **Institution Isolation** | Unique institution code validation and scoped demo workspaces | Database-backed multi-tenant schema with administrative provisioning |
+| **Circuit Simulations** | 5 client-side deterministic mathematical physics models | Real-time SPICE transient and frequency sweep simulation engine |
+| **Data Persistence** | Browser session & client memory state | Supabase PostgreSQL persistent tables |
+| **Hardware Diagnostics** | Photograph upload (10 MB), telemetry validation, 8-section report | Real-time video stream inspection and breadboard overlay highlighting |
 
 ---
 
-## 20. Repository Information
+## 15. Repository Information
 
 - **Local Path:** `D:\LabSense AI`
 - **GitHub Repository:** [`https://github.com/HackToBerFest-VVCE/t1c1-hack-hive`](https://github.com/HackToBerFest-VVCE/t1c1-hack-hive)
 - **Branch:** `main`
-- **Challenge:** Hacktoberfest VVCE Mysuru — Best Use of Gemma 4
+- **Challenge Track:** Hacktoberfest VVCE Mysuru — Best Use of Gemma 4
 - **License:** MIT License

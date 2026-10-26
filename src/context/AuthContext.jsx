@@ -16,6 +16,16 @@ const DEFAULT_DEMO_STUDENT_PROFILE = {
   full_name: 'Alex Morgan',
   role: 'student',
   avatar_url: null,
+  institution: 'Vidyavardhaka College of Engineering',
+  institution_code: 'LSAI-VVCE-A7K2',
+  department: 'Electronics & Communication Engineering',
+  usn: '4VV21EC042',
+  semester: '6th Semester',
+  enrolled_subjects: [
+    'Analog Electronics Lab (21EC32)',
+    'Digital System Design Lab (21EC33)',
+    'Microcontroller & Embedded Systems (21EC42)'
+  ]
 };
 
 const DEFAULT_DEMO_INSTRUCTOR_PROFILE = {
@@ -24,11 +34,67 @@ const DEFAULT_DEMO_INSTRUCTOR_PROFILE = {
   full_name: 'Dr. K. S. Sharma',
   role: 'instructor',
   avatar_url: null,
+  institution: 'Vidyavardhaka College of Engineering',
+  institution_code: 'LSAI-VVCE-A7K2',
+  department: 'Electronics & Communication Engineering',
+  staff_id: 'VVCE-FAC-ECE-108',
+  designation: 'Associate Professor & Lab Coordinator',
+  assigned_subjects: [
+    'Analog Electronics Lab (21EC32)',
+    'Digital System Design Lab (21EC33)'
+  ]
+};
+
+const DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE = {
+  id: '00000000-0000-0000-0000-000000000003',
+  email: 'admin.vvce@labsense.edu',
+  full_name: 'Prof. B. S. Gowda',
+  role: 'institution_admin',
+  avatar_url: null,
+  institution: 'Vidyavardhaka College of Engineering',
+  institution_code: 'LSAI-VVCE-A7K2',
+  department: 'Office of Academic Dean & Labs',
+  designation: 'Principal & Institutional Workspace Admin',
+  active_code: 'LSAI-VVCE-A7K2',
+  student_count: 842,
+  faculty_count: 28,
+  active_labs: 6
+};
+
+const DEFAULT_DEMO_SUPER_ADMIN_PROFILE = {
+  id: '00000000-0000-0000-0000-000000000004',
+  email: 'superadmin@labsense.io',
+  full_name: 'Sarah Jenkins',
+  role: 'platform_super_admin',
+  avatar_url: null,
+  institution: 'LabSense AI Platform Operations',
+  institution_code: 'GLOBAL-SUPER-ROOT',
+  department: 'Global Engineering & Platform Governance',
+  designation: 'Platform Super Administrator',
+  total_institutions: 14,
+  total_students: 12840,
+  total_instructors: 486
 };
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(DEFAULT_DEMO_STUDENT);
-  const [profile, setProfile] = useState(DEFAULT_DEMO_STUDENT_PROFILE);
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('labsense_local_session');
+      return saved ? JSON.parse(saved).user : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [profile, setProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('labsense_local_session');
+      return saved ? JSON.parse(saved).profile : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState(null);
 
@@ -58,6 +124,7 @@ export function AuthProvider({ children }) {
         setUser(session.user);
         await fetchProfile(session.user.id);
       } else {
+        localStorage.removeItem('labsense_local_session');
         setUser(null);
         setProfile(null);
       }
@@ -85,8 +152,8 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Student Sign Up
-  const signUp = async (email, password, fullName) => {
+  // Student or Instructor Sign Up
+  const signUp = async (email, password, fullName, targetRole = 'student', institutionCode = '') => {
     setAuthError(null);
     setLoading(true);
     try {
@@ -95,26 +162,43 @@ export function AuthProvider({ children }) {
           email,
           password,
           options: {
-            data: { full_name: fullName },
+            data: { full_name: fullName, role: targetRole, institution_code: institutionCode },
           },
         });
         if (error) throw error;
         return { success: true, user: data.user };
       } else {
-        // Local mode registration
+        // Local demonstration mode registration
         const newDemo = {
           id: `local-${Date.now()}`,
           email,
-          user_metadata: { full_name: fullName },
+          user_metadata: { full_name: fullName, role: targetRole, institution_code: institutionCode },
         };
         const newProfile = {
           id: newDemo.id,
           email,
           full_name: fullName,
-          role: 'student', // ALWAYS student initially
+          role: targetRole,
+          institution: 'Vidyavardhaka College of Engineering',
+          institution_code: institutionCode || 'LSAI-VVCE-A7K2',
+          department: 'Electronics & Communication Engineering',
+          ...(targetRole === 'student' ? {
+            usn: '4VV21EC099',
+            semester: '6th Semester',
+            enrolled_subjects: ['Analog Electronics Lab (21EC32)', 'Digital System Design Lab (21EC33)']
+          } : {
+            staff_id: 'VVCE-FAC-NEW',
+            designation: 'Assistant Professor (Pending Verification)',
+            assigned_subjects: ['Analog Electronics Lab (21EC32)']
+          })
         };
         setUser(newDemo);
         setProfile(newProfile);
+        try {
+          localStorage.setItem('labsense_local_session', JSON.stringify({ user: newDemo, profile: newProfile }));
+        } catch (e) {
+          console.warn('Storage save warning:', e);
+        }
         return { success: true, user: newDemo };
       }
     } catch (err) {
@@ -141,12 +225,30 @@ export function AuthProvider({ children }) {
         return { success: true };
       } else {
         // Local mode demo login
-        if (email.includes('instructor') || email.includes('sharma')) {
-          setUser({ ...DEFAULT_DEMO_STUDENT, email, user_metadata: { full_name: 'Dr. K. S. Sharma' } });
-          setProfile(DEFAULT_DEMO_INSTRUCTOR_PROFILE);
+        const em = email.toLowerCase();
+        let targetUser = null;
+        let targetProfile = null;
+
+        if (em.includes('super') || em.includes('sarah') || em.includes('platform')) {
+          targetUser = { id: DEFAULT_DEMO_SUPER_ADMIN_PROFILE.id, email, user_metadata: { full_name: 'Sarah Jenkins' } };
+          targetProfile = DEFAULT_DEMO_SUPER_ADMIN_PROFILE;
+        } else if (em.includes('admin') || em.includes('gowda') || em.includes('dean') || em.includes('principal')) {
+          targetUser = { id: DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE.id, email, user_metadata: { full_name: 'Prof. B. S. Gowda' } };
+          targetProfile = DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE;
+        } else if (em.includes('instructor') || em.includes('sharma') || em.includes('faculty')) {
+          targetUser = { id: DEFAULT_DEMO_INSTRUCTOR_PROFILE.id, email, user_metadata: { full_name: 'Dr. K. S. Sharma' } };
+          targetProfile = DEFAULT_DEMO_INSTRUCTOR_PROFILE;
         } else {
-          setUser({ ...DEFAULT_DEMO_STUDENT, email });
-          setProfile({ ...DEFAULT_DEMO_STUDENT_PROFILE, email });
+          targetUser = { ...DEFAULT_DEMO_STUDENT, email };
+          targetProfile = { ...DEFAULT_DEMO_STUDENT_PROFILE, email };
+        }
+
+        setUser(targetUser);
+        setProfile(targetProfile);
+        try {
+          localStorage.setItem('labsense_local_session', JSON.stringify({ user: targetUser, profile: targetProfile }));
+        } catch (e) {
+          console.warn('Storage save warning:', e);
         }
         return { success: true };
       }
@@ -163,8 +265,13 @@ export function AuthProvider({ children }) {
     if (isSupabaseConfigured && supabase) {
       await supabase.auth.signOut();
     }
-    setUser(DEFAULT_DEMO_STUDENT);
-    setProfile(DEFAULT_DEMO_STUDENT_PROFILE);
+    try {
+      localStorage.removeItem('labsense_local_session');
+    } catch (e) {
+      console.warn('Storage clear warning:', e);
+    }
+    setUser(null);
+    setProfile(null);
   };
 
   // Secure Instructor Role Elevation
@@ -188,11 +295,17 @@ export function AuthProvider({ children }) {
         await fetchProfile(user.id);
       } else {
         // Local state upgrade
-        setProfile((prev) => ({
-          ...prev,
+        const updatedProfile = {
+          ...(profile || DEFAULT_DEMO_INSTRUCTOR_PROFILE),
           role: 'instructor',
-          full_name: prev?.full_name?.startsWith('Dr.') ? prev.full_name : `Prof. ${prev?.full_name || 'Instructor'}`,
-        }));
+          full_name: profile?.full_name?.startsWith('Dr.') ? profile.full_name : `Prof. ${profile?.full_name || 'Instructor'}`,
+        };
+        setProfile(updatedProfile);
+        try {
+          localStorage.setItem('labsense_local_session', JSON.stringify({ user, profile: updatedProfile }));
+        } catch (e) {
+          console.warn('Storage save warning:', e);
+        }
       }
 
       return { success: true, message: 'Instructor privileges successfully activated!' };
@@ -201,24 +314,49 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Demo Switcher for fast hackathon testing
+  // Demo Switcher for fast hackathon testing across all 4 roles
   const switchDemoRole = (targetRole) => {
-    if (targetRole === 'instructor') {
-      setUser({ ...DEFAULT_DEMO_STUDENT, email: 'dr.sharma@labsense.edu' });
-      setProfile(DEFAULT_DEMO_INSTRUCTOR_PROFILE);
+    let targetUser = null;
+    let targetProfile = null;
+
+    if (targetRole === 'platform_super_admin' || targetRole === 'super_admin') {
+      targetUser = { id: DEFAULT_DEMO_SUPER_ADMIN_PROFILE.id, email: 'superadmin@labsense.io', user_metadata: { full_name: 'Sarah Jenkins' } };
+      targetProfile = DEFAULT_DEMO_SUPER_ADMIN_PROFILE;
+    } else if (targetRole === 'institution_admin' || targetRole === 'admin') {
+      targetUser = { id: DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE.id, email: 'admin.vvce@labsense.edu', user_metadata: { full_name: 'Prof. B. S. Gowda' } };
+      targetProfile = DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE;
+    } else if (targetRole === 'instructor') {
+      targetUser = { id: DEFAULT_DEMO_INSTRUCTOR_PROFILE.id, email: 'dr.sharma@labsense.edu', user_metadata: { full_name: 'Dr. K. S. Sharma' } };
+      targetProfile = DEFAULT_DEMO_INSTRUCTOR_PROFILE;
     } else {
-      setUser(DEFAULT_DEMO_STUDENT);
-      setProfile(DEFAULT_DEMO_STUDENT_PROFILE);
+      targetUser = DEFAULT_DEMO_STUDENT;
+      targetProfile = DEFAULT_DEMO_STUDENT_PROFILE;
+    }
+
+    setUser(targetUser);
+    setProfile(targetProfile);
+    try {
+      localStorage.setItem('labsense_local_session', JSON.stringify({ user: targetUser, profile: targetProfile }));
+    } catch (e) {
+      console.warn('Storage save warning:', e);
     }
   };
+
+  const currentRole = profile?.role || null;
+  const isAuthenticated = Boolean(user && profile);
 
   return (
     <AuthContext.Provider
       value={{
         user,
         profile,
-        role: profile?.role || 'student',
-        isInstructor: profile?.role === 'instructor' || profile?.role === 'admin',
+        role: currentRole,
+        isAuthenticated,
+        isStudent: currentRole === 'student',
+        isInstructor: currentRole === 'instructor' || currentRole === 'institution_admin' || currentRole === 'platform_super_admin' || currentRole === 'admin',
+        isInstructorOnly: currentRole === 'instructor',
+        isInstitutionAdmin: currentRole === 'institution_admin',
+        isSuperAdmin: currentRole === 'platform_super_admin',
         loading,
         authError,
         isSupabaseConfigured,

@@ -9,12 +9,15 @@ import Footer from './components/Footer';
 import StudentPortal from './components/student/StudentPortal';
 import InstructorPortal from './components/instructor/InstructorPortal';
 import StudentSimulations from './components/student/StudentSimulations';
+import InstitutionAdminDashboard from './components/admin/InstitutionAdminDashboard';
+import SuperAdminDashboard from './components/superadmin/SuperAdminDashboard';
 import HowGemmaWorks from './components/HowGemmaWorks';
+import ErrorBoundary from './components/ErrorBoundary';
 import { analyzeCircuit } from './lib/api';
 import './App.css';
 
 function MainApp() {
-  const [currentView, setCurrentView] = useState('workbench'); // 'workbench' | 'student' | 'instructor' | 'simulations'
+  const [currentView, setCurrentView] = useState('workbench'); // 'workbench' | 'student' | 'instructor' | 'institution_admin' | 'super_admin' | 'simulations'
   const [showGemmaModal, setShowGemmaModal] = useState(false);
 
   // Staged Workbench State
@@ -194,21 +197,45 @@ function MainApp() {
         {/* View 2: Student Learning Portal */}
         {currentView === 'student' && (
           <div className="portal-page-wrapper">
-            <StudentPortal />
+            <ErrorBoundary fallbackTitle="Student Portal">
+              <StudentPortal />
+            </ErrorBoundary>
           </div>
         )}
 
         {/* View 3: Circuit Simulations */}
         {currentView === 'simulations' && (
           <div className="portal-page-wrapper">
-            <StudentSimulations />
+            <ErrorBoundary fallbackTitle="Circuit Simulations">
+              <StudentSimulations />
+            </ErrorBoundary>
           </div>
         )}
 
         {/* View 4: Instructor Portal */}
         {currentView === 'instructor' && (
           <div className="portal-page-wrapper">
-            <InstructorPortal />
+            <ErrorBoundary fallbackTitle="Instructor Portal">
+              <InstructorPortal />
+            </ErrorBoundary>
+          </div>
+        )}
+
+        {/* View 5: Institution Admin Portal */}
+        {currentView === 'institution_admin' && (
+          <div className="portal-page-wrapper">
+            <ErrorBoundary fallbackTitle="Institution Admin Portal">
+              <InstitutionAdminDashboard />
+            </ErrorBoundary>
+          </div>
+        )}
+
+        {/* View 6: Platform Super Admin Governance */}
+        {currentView === 'super_admin' && (
+          <div className="portal-page-wrapper">
+            <ErrorBoundary fallbackTitle="Platform Super Admin Governance">
+              <SuperAdminDashboard />
+            </ErrorBoundary>
           </div>
         )}
       </main>
