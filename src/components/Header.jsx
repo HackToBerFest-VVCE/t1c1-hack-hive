@@ -1,106 +1,203 @@
 import React, { useState } from 'react';
-import { Cpu, Menu, X, Sparkles } from 'lucide-react';
+import {
+  Cpu,
+  Menu,
+  X,
+  Sparkles,
+  GraduationCap,
+  ShieldCheck,
+  User,
+  ChevronDown
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import AuthModal from './AuthModal';
 
-export default function Header() {
+export default function Header({ currentView, onViewChange, onOpenGemmaArchitecture }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [activeTarget, setActiveTarget] = useState('home');
+  const { profile, role, isInstructor } = useAuth();
 
-  const scrollToSection = (e, sectionId) => {
-    e.preventDefault();
+  const handleNavClick = (viewId, scrollTarget = null, targetKey = null) => {
+    setActiveTarget(targetKey || viewId);
+    onViewChange(viewId);
     setMobileMenuOpen(false);
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+
+    if (scrollTarget) {
+      setTimeout(() => {
+        const el = document.getElementById(scrollTarget);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 50);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
+  const handleSelectPortalFromModal = (portalId) => {
+    onViewChange(portalId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <header className="site-header">
-      <div className="header-container">
-        <a 
-          href="#hero" 
-          className="brand-logo"
-          onClick={(e) => scrollToSection(e, 'hero')}
-          aria-label="LabSense AI Home"
-        >
-          <div className="logo-icon-wrapper">
-            <Cpu className="logo-icon" size={24} />
-          </div>
-          <div className="brand-text">
-            <span className="brand-name">LabSense<span className="brand-accent"> AI</span></span>
-            <span className="brand-tagline">Gemma-Powered Lab Assistant</span>
-          </div>
-        </a>
-
-        <div className="header-badge" title="Gemma 4 integration planned for Milestone 2">
-          <Sparkles size={14} className="badge-sparkle" />
-          <span>Gemma 4 Challenge Prototype</span>
-        </div>
-
-        {/* Desktop Navigation */}
-        <nav className="desktop-nav" aria-label="Main Navigation">
-          <a 
-            href="#hero" 
-            className="nav-link"
-            onClick={(e) => scrollToSection(e, 'hero')}
+    <>
+      <header className="site-header">
+        <div className="header-container">
+          {/* Left: Brand Logo & Name */}
+          <button
+            type="button"
+            className="brand-logo"
+            onClick={() => handleNavClick('workbench', null, 'home')}
+            aria-label="LabSense AI Home"
           >
-            Home
-          </a>
-          <a 
-            href="#workspace" 
-            className="nav-link"
-            onClick={(e) => scrollToSection(e, 'workspace')}
-          >
-            Troubleshoot
-          </a>
-          <a 
-            href="#how-it-works" 
-            className="nav-link"
-            onClick={(e) => scrollToSection(e, 'how-it-works')}
-          >
-            How It Works
-          </a>
-        </nav>
+            <div className="logo-icon-wrapper">
+              <Cpu className="logo-icon" size={24} />
+            </div>
+            <div className="brand-text">
+              <span className="brand-name">LabSense<span className="brand-accent"> AI</span></span>
+              <span className="brand-tagline">Multimodal Lab Platform</span>
+            </div>
+          </button>
 
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          className="mobile-menu-toggle"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={mobileMenuOpen}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Mobile navigation drawer */}
-      {mobileMenuOpen && (
-        <div className="mobile-nav-drawer" role="dialog" aria-modal="true">
-          <nav className="mobile-nav">
-            <a 
-              href="#hero" 
-              className="mobile-nav-link"
-              onClick={(e) => scrollToSection(e, 'hero')}
+          {/* Centre: Desktop Navigation Links */}
+          <nav className="desktop-nav" aria-label="Main Navigation">
+            <button
+              type="button"
+              className={`nav-link ${currentView === 'workbench' && activeTarget === 'home' ? 'active' : ''}`}
+              onClick={() => handleNavClick('workbench', null, 'home')}
             >
               Home
-            </a>
-            <a 
-              href="#workspace" 
-              className="mobile-nav-link"
-              onClick={(e) => scrollToSection(e, 'workspace')}
+            </button>
+            <button
+              type="button"
+              className={`nav-link ${currentView === 'workbench' && activeTarget === 'bench' ? 'active' : ''}`}
+              onClick={() => handleNavClick('workbench', 'workspace', 'bench')}
             >
-              Troubleshoot
-            </a>
-            <a 
-              href="#how-it-works" 
-              className="mobile-nav-link"
-              onClick={(e) => scrollToSection(e, 'how-it-works')}
+              Diagnostic Bench
+            </button>
+            <button
+              type="button"
+              className={`nav-link ${currentView === 'student' ? 'active' : ''}`}
+              onClick={() => handleNavClick('student', null, 'experiments')}
             >
-              How It Works
-            </a>
+              Experiments
+            </button>
+            <button
+              type="button"
+              className={`nav-link ${currentView === 'simulations' ? 'active' : ''}`}
+              onClick={() => handleNavClick('simulations', null, 'simulations')}
+            >
+              Simulations
+            </button>
+            <button
+              type="button"
+              className="nav-link nav-link-special"
+              onClick={onOpenGemmaArchitecture}
+              title="Inspect Gemma 4 AI Architecture"
+            >
+              <Sparkles size={16} />
+              <span>How It Works</span>
+            </button>
           </nav>
+
+          {/* Right: One Clear Login / Profile Action */}
+          <div className="header-actions">
+            <button
+              type="button"
+              className="btn-header-profile"
+              onClick={() => setAuthModalOpen(true)}
+              title={`Signed in as ${profile?.full_name || 'User'} (${role}). Click to switch role or explore portals.`}
+            >
+              <div className={`avatar-pill ${isInstructor ? 'avatar-instructor' : 'avatar-student'}`}>
+                {isInstructor ? <ShieldCheck size={16} /> : <GraduationCap size={16} />}
+              </div>
+              <div className="profile-text-group">
+                <span className="profile-name">
+                  {profile?.full_name ? profile.full_name.split(' ')[0] : 'Role Access'}
+                </span>
+                <span className="profile-role-sub">
+                  {isInstructor ? 'Instructor' : 'Student'}
+                </span>
+              </div>
+              <ChevronDown size={14} className="profile-chevron" />
+            </button>
+
+            {/* Mobile menu hamburger toggle */}
+            <button
+              type="button"
+              className="mobile-menu-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
-      )}
-    </header>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="mobile-nav-drawer" role="dialog" aria-modal="true">
+            <nav className="mobile-nav">
+              <button
+                type="button"
+                className={`mobile-nav-link ${currentView === 'workbench' && activeTarget === 'home' ? 'active' : ''}`}
+                onClick={() => handleNavClick('workbench', null, 'home')}
+              >
+                Home
+              </button>
+              <button
+                type="button"
+                className={`mobile-nav-link ${currentView === 'workbench' && activeTarget === 'bench' ? 'active' : ''}`}
+                onClick={() => handleNavClick('workbench', 'workspace', 'bench')}
+              >
+                Diagnostic Bench
+              </button>
+              <button
+                type="button"
+                className={`mobile-nav-link ${currentView === 'student' ? 'active' : ''}`}
+                onClick={() => handleNavClick('student', null, 'experiments')}
+              >
+                Experiments
+              </button>
+              <button
+                type="button"
+                className={`mobile-nav-link ${currentView === 'simulations' ? 'active' : ''}`}
+                onClick={() => handleNavClick('simulations', null, 'simulations')}
+              >
+                Simulations
+              </button>
+              <button
+                type="button"
+                className="mobile-nav-link mobile-nav-link-special"
+                onClick={() => { setMobileMenuOpen(false); onOpenGemmaArchitecture(); }}
+              >
+                <Sparkles size={16} />
+                <span>How It Works</span>
+              </button>
+
+              <div className="mobile-auth-section">
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block"
+                  onClick={() => { setMobileMenuOpen(false); setAuthModalOpen(true); }}
+                >
+                  <User size={16} />
+                  <span>Switch Role / Portal Access</span>
+                </button>
+              </div>
+            </nav>
+          </div>
+        )}
+      </header>
+
+      {/* Role Selection & Authentication Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSelectPortal={handleSelectPortalFromModal}
+      />
+    </>
   );
 }

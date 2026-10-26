@@ -173,9 +173,9 @@ export default function ImageUpload({ onImageChange, selectedImage, validationEr
         /* Image Preview Box */
         <div className="preview-container">
           <div className="preview-image-box">
-            <img 
-              src={selectedImage.previewUrl} 
-              alt="Circuit photograph preview" 
+            <img
+              src={selectedImage.previewUrl}
+              alt="Circuit photograph preview"
               className="preview-image"
             />
             <div className="preview-overlay">

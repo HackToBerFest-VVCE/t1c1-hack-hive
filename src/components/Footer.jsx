@@ -1,7 +1,7 @@
 import React from 'react';
-import { Cpu, ShieldCheck } from 'lucide-react';
+import { Cpu, ShieldCheck, Sparkles } from 'lucide-react';
 
-export default function Footer() {
+export default function Footer({ onOpenGemmaArchitecture }) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -10,21 +10,22 @@ export default function Footer() {
         <div className="footer-top">
           <div className="footer-brand">
             <div className="footer-logo">
-              <Cpu size={20} className="footer-logo-icon" />
+              <Cpu size={22} className="footer-logo-icon" />
               <span className="footer-brand-name">LabSense AI</span>
             </div>
             <p className="footer-description">
-              An AI-assisted electronics laboratory troubleshooting companion designed to help engineering students systematically diagnose circuit faults, understand unexpected readings, and master practical electronics.
+              Multimodal electronics laboratory platform powered by Gemma 4. Helping engineering students understand circuits, troubleshoot faults, practice interactive simulations, and learn safely.
             </p>
           </div>
 
           <div className="footer-links-group">
-            <h4 className="footer-heading">Milestone 1 Scope</h4>
+            <h4 className="footer-heading">Platform Features</h4>
             <ul className="footer-links">
-              <li><span>Client-side Circuit Image Ingestion</span></li>
-              <li><span>Laboratory Symptom & Measurement Staging</span></li>
-              <li><span>Diagnostic Report Blueprint Interface</span></li>
-              <li><span>Local Input Validation & Safety Guidance</span></li>
+              <li><span>Multimodal Circuit Diagnosis</span></li>
+              <li><span>Student & Instructor Portals</span></li>
+              <li><span>5 Educational Circuit Simulations</span></li>
+              <li><span>Deterministic Assessment Grading</span></li>
+              <li><span>Supabase Auth & Database Security</span></li>
             </ul>
           </div>
 
@@ -32,9 +33,18 @@ export default function Footer() {
             <h4 className="footer-heading">Challenge Details</h4>
             <ul className="footer-links">
               <li><span><strong>Event:</strong> Hacktoberfest — VVCE Mysuru</span></li>
-              <li><span><strong>Challenge:</strong> Best Use of Gemma 4</span></li>
-              <li><span><strong>Model Target:</strong> Gemma 4 Multimodal</span></li>
-              <li><span><strong>Scope:</strong> Low-voltage educational circuits</span></li>
+              <li><span><strong>Track:</strong> Best Use of Gemma 4</span></li>
+              <li><span><strong>Model Target:</strong> gemma-4-31b-it</span></li>
+              <li>
+                <button
+                  type="button"
+                  className="btn-footer-link"
+                  onClick={onOpenGemmaArchitecture}
+                >
+                  <Sparkles size={14} className="text-blue" />
+                  <span>How We Use Gemma 4</span>
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -43,11 +53,11 @@ export default function Footer() {
           <div className="footer-disclaimer">
             <ShieldCheck size={16} className="disclaimer-icon" />
             <span>
-              <strong>Educational Prototype Notice:</strong> LabSense AI is an experimental educational prototype developed for Hacktoberfest at VVCE Mysuru. Always observe electronics lab bench safety protocols, power limits, and instructor instructions when working with physical hardware.
+              <strong>Laboratory Safety Notice:</strong> LabSense AI assists student learning and fault isolation. Always observe electronics laboratory safety protocols, power supply current compliance limits, and faculty guidelines when testing physical bench hardware.
             </span>
           </div>
           <p className="footer-copyright">
-            © {currentYear} LabSense AI • Built with React & Vite
+            © {currentYear} LabSense AI (Team Hack Hive) • Built for Hacktoberfest VVCE Mysuru
           </p>
         </div>
       </div>

@@ -1,48 +1,48 @@
 import React from 'react';
-import { UploadCloud, Cpu, CheckCircle2, AlertCircle, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { UploadCloud, Cpu, CheckCircle2, ArrowRight, ShieldCheck, Zap, Sparkles } from 'lucide-react';
 
-export default function HowItWorks() {
+export default function HowItWorks({ onOpenArchitecture }) {
   const steps = [
     {
       step: '01',
-      title: 'Upload & Describe',
-      status: 'Implemented in Milestone 1',
+      title: 'Perception & Telemetry',
+      status: 'Active Multimodal Ingestion',
       statusType: 'active',
       icon: UploadCloud,
-      summary: 'Upload a circuit photograph and describe the experiment problem.',
+      summary: 'Upload bench circuit photos, specify experiment classification, and enter multimeter telemetry.',
       details: [
         'Client-side image validation (JPEG, PNG, WebP up to 10 MB)',
-        'Structured experiment classification (LED, Resistor, Arduino, Sensors)',
-        'Problem description & observed symptoms capture',
-        'Bench telemetry capture (Supply Voltage, Measured Voltage, Current)',
+        'Bench telemetry capture: Supply Voltage, Measured Voltage, and Loop Current',
+        'Distinguishes valid zero readings (0.0 V) from unmeasured inputs',
+        'Captures user-described symptoms and unexpected behavior',
       ],
     },
     {
       step: '02',
-      title: 'Multimodal Analysis',
-      status: 'Planned for Milestone 2',
-      statusType: 'planned',
+      title: 'Gemma 4 Multimodal Reasoning',
+      status: 'Live Intelligence Layer',
+      statusType: 'active',
       icon: Cpu,
-      summary: 'The planned Gemma-powered engine will combine visual evidence, experimental readings, symptoms, and reference information.',
+      summary: 'Gemma 4 (gemma-4-31b-it) analyzes circuit imagery alongside multimeter readings through the secure FastAPI backend.',
       details: [
-        'Multimodal vision-language prompt engineering with Gemma 4',
-        'Component & pinout detection on breadboards and breakout boards',
-        'Polarity checking, connection continuity, and track verification',
-        'Cross-referencing observed bench values against theoretical calculations',
+        'Multimodal vision-language prompt engineering with validated JSON schemas',
+        'Visual breadboard coordinate and component pinout recognition',
+        'Correlates observed voltages with physical semiconductor physics',
+        'Separates confirmed empirical facts from diagnostic hypotheses',
       ],
     },
     {
       step: '03',
-      title: 'Systematic Troubleshooting',
-      status: 'Planned for Milestone 2',
-      statusType: 'planned',
+      title: 'Systematic Guidance & Tutoring',
+      status: 'Structured Educational Output',
+      statusType: 'active',
       icon: ShieldCheck,
-      summary: 'The planned AI system will provide possible causes, verification tests, expected observations, corrective guidance, and safety precautions.',
+      summary: 'Delivers an 8-section actionable troubleshooting report and interactive multi-turn session tutoring.',
       details: [
-        'Ranked fault hypotheses with clear causality chains',
-        'Step-by-step bench verification tests with probe locations',
-        'Expected quantitative multimeter observations',
-        'Laboratory safety precautions and component damage prevention',
+        'Ranked fault hypotheses with explicit likelihood ratings and evidence',
+        'Step-by-step multimeter verification tests with exact probe placements',
+        'Actionable corrective wiring procedures and crucial safety alerts',
+        'Interactive follow-up questions preserving full session context',
       ],
     },
   ];
@@ -57,20 +57,19 @@ export default function HowItWorks() {
           </div>
           <h2 className="section-heading">How LabSense AI Works</h2>
           <p className="section-subheading">
-            A transparent 3-step diagnostic framework designed to bridge physical bench experiments with multimodal AI reasoning.
+            A transparent 3-step diagnostic framework designed to bridge physical workbench experiments with multimodal Gemma 4 reasoning.
           </p>
         </div>
 
         <div className="steps-grid">
           {steps.map((item) => {
             const IconComponent = item.icon;
-            const isDone = item.statusType === 'active';
             return (
-              <div key={item.step} className={`step-card ${isDone ? 'step-card-active' : 'step-card-planned'}`}>
+              <div key={item.step} className="step-card step-card-active">
                 <div className="step-card-header">
                   <span className="step-number">{item.step}</span>
-                  <span className={`step-status-tag ${isDone ? 'tag-live' : 'tag-planned'}`}>
-                    {isDone ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  <span className="step-status-tag tag-live">
+                    <CheckCircle2 size={12} />
                     <span>{item.status}</span>
                   </span>
                 </div>
@@ -95,10 +94,25 @@ export default function HowItWorks() {
           })}
         </div>
 
+        {onOpenArchitecture && (
+          <div className="architecture-callout-row">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={onOpenArchitecture}
+            >
+              <Sparkles size={18} />
+              <span>Deep Dive: Read the Gemma 4 AI Architecture</span>
+            </button>
+          </div>
+        )}
+
         <div className="hackathon-alignment-box">
-          <div className="alignment-badge">Hackathon Context</div>
+          <div className="alignment-badge">Hackathon Challenge Focus</div>
           <p className="alignment-text">
-            <strong>Hacktoberfest VVCE Mysuru — Best Use of Gemma 4:</strong> LabSense AI focuses on solving the real educational challenge students face during electronics laboratory sessions. Today's frontend milestone establishes a robust, accessible foundation for the multimodal Gemma 4 inference pipeline.
+            <strong>Hacktoberfest VVCE Mysuru — Best Use of Gemma 4:</strong> LabSense AI demonstrates authentic, substantial use of Gemma 4
+            for multimodal circuit understanding, evidence-based troubleshooting, simulation tutoring, and instructor co-pilot assistance,
+            backed by deterministic electrical math and Supabase database security.
           </p>
         </div>
       </div>

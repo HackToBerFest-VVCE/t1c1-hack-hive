@@ -3,16 +3,21 @@ import { Play, RotateCcw, HelpCircle, FileText, Activity, AlertCircle, Sparkles 
 import ImageUpload from './ImageUpload';
 
 const EXPERIMENT_TYPES = [
-  'LED Circuit',
-  'Resistor Circuit',
-  'Arduino Circuit',
-  'Basic Sensor Circuit',
-  'Other',
+  'LED & Series Resistor',
+  'Inverting Op-Amp',
+  '555 Timer Astable Multivibrator',
+  'Full-Wave Bridge Rectifier',
+  'BJT Common Emitter Amplifier',
+  'R-C Low Pass Filter',
+  'Voltage Regulator 7805',
+  'Voltage Divider Network',
+  'Arduino & Sensor Interfacing',
+  'Custom Breadboard Circuit',
 ];
 
 export default function ExperimentForm({ onSubmitExperiment, onReset, isPrepared }) {
   const [circuitImage, setCircuitImage] = useState(null);
-  const [experimentType, setExperimentType] = useState('LED Circuit');
+  const [experimentType, setExperimentType] = useState('LED & Series Resistor');
   const [problemDescription, setProblemDescription] = useState('');
   const [observedSymptoms, setObservedSymptoms] = useState('');
   const [expectedBehavior, setExpectedBehavior] = useState('');
@@ -98,7 +103,7 @@ export default function ExperimentForm({ onSubmitExperiment, onReset, isPrepared
 
   const handleResetForm = () => {
     setCircuitImage(null);
-    setExperimentType('LED Circuit');
+    setExperimentType('LED & Series Resistor');
     setProblemDescription('');
     setObservedSymptoms('');
     setExpectedBehavior('');
@@ -111,7 +116,7 @@ export default function ExperimentForm({ onSubmitExperiment, onReset, isPrepared
 
   // Quick Demo Helper for Hackathon Evaluation
   const handleLoadSampleData = () => {
-    setExperimentType('LED Circuit');
+    setExperimentType('LED & Series Resistor');
     setProblemDescription('The red indicator LED does not turn on when the 5V bench supply is engaged. Breadboard connections have been checked.');
     setObservedSymptoms('Resistor R1 feels warm to the touch. Multimeter across the LED leads registers 0.04V instead of the expected forward bias.');
     setExpectedBehavior('Red 5mm LED should illuminate with ~1.8V to 2.1V forward voltage drop and 15-20mA current through the 220-ohm resistor.');
@@ -139,8 +144,8 @@ export default function ExperimentForm({ onSubmitExperiment, onReset, isPrepared
           </div>
         </div>
 
-        <button 
-          type="button" 
+        <button
+          type="button"
           className="btn-text-action"
           onClick={handleLoadSampleData}
           title="Populate test data for evaluation"
