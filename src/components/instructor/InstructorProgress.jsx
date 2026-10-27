@@ -12,7 +12,7 @@ import {
 const REAL_STUDENT_ROSTER = [
   {
     id: 's-1',
-    name: 'Alex Morgan',
+    name: 'Darshan R',
     email: 'alex.student@labsense.edu',
     completed_experiments: 2,
     total_experiments: 3,

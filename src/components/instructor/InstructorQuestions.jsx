@@ -16,7 +16,7 @@ import { draftInstructorReply } from '../../lib/api';
 const INITIAL_INBOX_QUESTIONS = [
   {
     id: 't-101',
-    student_name: 'Alex Morgan',
+    student_name: 'Darshan R',
     student_email: 'alex.student@labsense.edu',
     experiment_title: 'LED Forward Characteristics & Current Limiting',
     title: 'Why is my series resistor measuring 3.1V instead of 5V?',
@@ -81,7 +81,7 @@ export default function InstructorQuestions() {
 
     const newReply = {
       id: `r-${Date.now()}`,
-      author_name: 'Dr. K. S. Sharma',
+      author_name: 'Dr. Chethan M S',
       author_role: 'instructor',
       content: replyContent.trim(),
       is_ai_drafted: Boolean(aiDraftMeta),

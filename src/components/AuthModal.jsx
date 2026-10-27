@@ -24,6 +24,7 @@ import {
   Sliders
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
   const {
@@ -138,7 +139,41 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
     setErrors({});
     setSubmitting(true);
 
-    // Derive a readable illustrative sample code from institution name
+    // If Supabase is configured, submit real registration RPC
+    if (isSupabaseConfigured && supabase) {
+      supabase.rpc('register_institution_request', {
+        p_name: instForm.officialName.trim(),
+        p_institution_type: instForm.institutionType,
+        p_country: instForm.country.trim(),
+        p_state: instForm.state.trim(),
+        p_city: instForm.city.trim(),
+        p_official_email: instForm.officialEmail.trim(),
+        p_contact_name: instForm.contactName.trim(),
+        p_contact_designation: instForm.contactDesignation.trim(),
+        p_contact_email: instForm.contactEmail.trim(),
+        p_contact_phone: instForm.contactPhone.trim()
+      }).then(({ data, error }) => {
+        setSubmitting(false);
+        if (error) {
+          console.warn('Supabase institution registration error:', error);
+          // Fall back to local generated code if table is pending
+          const words = instForm.officialName.trim().split(/\s+/);
+          let initials = words.map(w => w[0].toUpperCase()).slice(0, 4).join('');
+          if (initials.length < 3) initials = 'COL';
+          setGeneratedSampleCode(`LSAI-${initials}-A7K2`);
+        } else if (data?.code) {
+          setGeneratedSampleCode(data.code);
+        }
+        setScreen('institution-result');
+      }).catch(err => {
+        setSubmitting(false);
+        console.warn('Institution registration submission warning:', err);
+        setScreen('institution-result');
+      });
+      return;
+    }
+
+    // Derive a readable illustrative sample code from institution name (Offline Demo)
     const words = instForm.officialName.trim().split(/\s+/);
     let initials = words.map(w => w[0].toUpperCase()).slice(0, 4).join('');
     if (initials.length < 3) initials = 'COL';
@@ -170,7 +205,8 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
     if (signupForm.password !== signupForm.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match.';
     }
-    if (!signupForm.institutionCode.trim()) {
+    const trimmedCode = signupForm.institutionCode.trim().toUpperCase();
+    if (!trimmedCode) {
       newErrors.institutionCode = 'Institution code is required. Ask your college administrator or register your institution.';
     }
 
@@ -182,19 +218,74 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
     setErrors({});
     setSubmitting(true);
 
-    try {
-      // In demonstration mode, simulate local account creation
-      await signUp(signupForm.email, signupForm.password, signupForm.fullName);
-      switchDemoRole(signupForm.role);
+    // Verify college code against approved institution record in Supabase
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: instData, error: instError } = await supabase
+          .from('institutions')
+          .select('id, name, code, status, is_active')
+          .eq('code', trimmedCode)
+          .eq('status', 'approved')
+          .eq('is_active', true)
+          .maybeSingle();
 
+        if (instError || !instData) {
+          setErrors({
+            institutionCode: `Institution code "${trimmedCode}" is invalid or not yet approved. Please use an approved code like "LSAI-VVCE-A7K2".`
+          });
+          setSubmitting(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Institution code verification warning:', err);
+      }
+    }
+
+    try {
+      const res = await signUp(
+        signupForm.email,
+        signupForm.password,
+        signupForm.fullName,
+        signupForm.role,
+        trimmedCode,
+        signupForm.idNumber
+      );
+
+      if (!res.success) {
+        setStatusMsg({
+          type: 'error',
+          text: res.error || 'Account creation failed. Please verify your details.'
+        });
+        return;
+      }
+
+      if (res.needsEmailConfirmation) {
+        setStatusMsg({
+          type: 'info',
+          text: `Account created for ${signupForm.fullName} in Supabase! Supabase has sent a verification email to ${signupForm.email}. Please verify your email before logging in. (Or confirm the user in your Supabase Auth dashboard).`
+        });
+        setLoginForm((prev) => ({ ...prev, email: signupForm.email, password: '' }));
+        setTimeout(() => {
+          setScreen('login');
+        }, 4000);
+        return;
+      }
+
+      if (!isSupabaseConfigured) {
+        switchDemoRole(signupForm.role);
+      }
+
+      const assignedRole = res.profile?.role || signupForm.role;
       setStatusMsg({
         type: 'success',
-        text: `Demonstration account created for ${signupForm.fullName} (${signupForm.role.toUpperCase()}) linked to institution code ${signupForm.institutionCode}. Redirecting to portal...`
+        text: isSupabaseConfigured
+          ? `Welcome ${signupForm.fullName}! Successfully authenticated and registered in Supabase. Loading your workspace...`
+          : `Demonstration account created for ${signupForm.fullName} (${signupForm.role.toUpperCase()}) linked to institution code ${signupForm.institutionCode}. Redirecting to portal...`
       });
 
       setTimeout(() => {
         if (onSelectPortal) {
-          onSelectPortal(signupForm.role);
+          onSelectPortal(assignedRole === 'platform_super_admin' ? 'super_admin' : assignedRole);
         }
         onClose();
       }, 900);
@@ -228,17 +319,19 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
       if (res.success) {
         setStatusMsg({
           type: 'success',
-          text: 'Demonstration login verified. Redirecting to your laboratory workspace...'
+          text: isSupabaseConfigured
+            ? 'Supabase authentication verified. Loading your workspace...'
+            : 'Demonstration login verified. Redirecting to your laboratory workspace...'
         });
         setTimeout(() => {
           if (onSelectPortal) {
-            const em = loginForm.email.toLowerCase();
             let destRole = 'student';
-            if (em.includes('super') || em.includes('sarah') || em.includes('platform')) {
+            const userRole = res.profile?.role || profile?.role || 'student';
+            if (userRole === 'platform_super_admin' || userRole === 'super_admin') {
               destRole = 'super_admin';
-            } else if (em.includes('admin') || em.includes('gowda') || em.includes('dean') || em.includes('principal')) {
+            } else if (userRole === 'institution_admin') {
               destRole = 'institution_admin';
-            } else if (em.includes('instructor') || em.includes('sharma') || em.includes('faculty')) {
+            } else if (userRole === 'instructor') {
               destRole = 'instructor';
             }
             onSelectPortal(destRole);
@@ -246,7 +339,13 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
           onClose();
         }, 700);
       } else {
-        setStatusMsg({ type: 'error', text: res.error || 'Login failed.' });
+        let errorMsg = res.error || 'Login failed.';
+        if (errorMsg.toLowerCase().includes('email not confirmed')) {
+          errorMsg = `Email not confirmed. Please check ${loginForm.email} for the verification link sent by Supabase, or confirm the user in your Supabase Dashboard (Authentication -> Users).`;
+        } else if (errorMsg.toLowerCase().includes('invalid login credentials')) {
+          errorMsg = 'Invalid email or password. Please verify your credentials or register an account.';
+        }
+        setStatusMsg({ type: 'error', text: errorMsg });
       }
     } finally {
       setSubmitting(false);
@@ -507,7 +606,7 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
                   onClick={() => handleQuickEnterRole('student', 'student')}
                 >
                   <GraduationCap size={15} />
-                  <span>Student (Alex Morgan)</span>
+                  <span>Student (Darshan R)</span>
                 </button>
                 <button
                   type="button"
@@ -515,7 +614,7 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
                   onClick={() => handleQuickEnterRole('instructor', 'instructor')}
                 >
                   <ShieldCheck size={15} />
-                  <span>Instructor (Dr. Sharma)</span>
+                  <span>Instructor (Dr. Chethan M S)</span>
                 </button>
                 <button
                   type="button"
@@ -523,7 +622,7 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
                   onClick={() => handleQuickEnterRole('institution_admin', 'institution_admin')}
                 >
                   <Building2 size={15} />
-                  <span>Institution Admin (Prof. Gowda)</span>
+                  <span>Institution Admin (Prof. Chinmayi D A)</span>
                 </button>
                 <button
                   type="button"
@@ -531,7 +630,7 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
                   onClick={() => handleQuickEnterRole('platform_super_admin', 'super_admin')}
                 >
                   <ShieldAlert size={15} />
-                  <span>Super Admin (Sarah Jenkins)</span>
+                  <span>Super Admin (Harshith T S)</span>
                 </button>
               </div>
             </div>
@@ -671,7 +770,7 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
                       id="contact-name"
                       type="text"
                       className={`form-control ${errors.contactName ? 'is-invalid' : ''}`}
-                      placeholder="e.g. Dr. B. Sadashive Gowda"
+                      placeholder="e.g. Prof. Chinmayi D A"
                       value={instForm.contactName}
                       onChange={(e) => setInstForm({ ...instForm, contactName: e.target.value })}
                     />
@@ -1321,7 +1420,7 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
                   >
                     <GraduationCap size={16} className="text-blue" />
                     <div className="eval-shortcut-text">
-                      <span className="eval-name">Alex Morgan</span>
+                      <span className="eval-name">Darshan R</span>
                       <span className="eval-role">Student • 3rd Year ECE, VVCE</span>
                     </div>
                   </button>
@@ -1333,7 +1432,7 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
                   >
                     <ShieldCheck size={16} className="text-emerald" />
                     <div className="eval-shortcut-text">
-                      <span className="eval-name">Dr. K. S. Sharma</span>
+                      <span className="eval-name">Dr. Chethan M S</span>
                       <span className="eval-role">Instructor • ECE Lab Coordinator</span>
                     </div>
                   </button>
@@ -1345,7 +1444,7 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
                   >
                     <Building2 size={16} className="text-indigo" />
                     <div className="eval-shortcut-text">
-                      <span className="eval-name">Prof. B. S. Gowda</span>
+                      <span className="eval-name">Prof. Chinmayi D A</span>
                       <span className="eval-role">Institution Admin • VVCE Principal</span>
                     </div>
                   </button>
@@ -1357,7 +1456,7 @@ export default function AuthModal({ isOpen, onClose, onSelectPortal }) {
                   >
                     <ShieldAlert size={16} className="text-amber" />
                     <div className="eval-shortcut-text">
-                      <span className="eval-name">Sarah Jenkins</span>
+                      <span className="eval-name">Harshith T S</span>
                       <span className="eval-role">Super Admin • Platform Operations</span>
                     </div>
                   </button>

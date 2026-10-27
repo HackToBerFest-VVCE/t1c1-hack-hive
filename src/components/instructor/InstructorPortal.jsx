@@ -48,7 +48,7 @@ export default function InstructorPortal({ initialTab = 'experiments' }) {
               onClick={() => switchDemoRole('instructor')}
             >
               <ShieldCheck size={18} />
-              <span>Switch to Instructor View (Dr. Sharma)</span>
+              <span>Switch to Instructor View (Dr. Chethan M S)</span>
             </button>
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function InstructorPortal({ initialTab = 'experiments' }) {
           </div>
           <div>
             <div className="scope-title-row">
-              <span className="faculty-name">{profile?.full_name || 'Dr. K. S. Sharma'}</span>
+              <span className="faculty-name">{profile?.full_name || 'Dr. Chethan M S'}</span>
               <span className="faculty-role-pill">Faculty Instructor</span>
               <span className="faculty-id-pill">{profile?.staff_id || 'VVCE-FAC-ECE-108'}</span>
             </div>

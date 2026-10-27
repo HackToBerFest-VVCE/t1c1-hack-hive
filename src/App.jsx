@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import ExperimentForm from './components/ExperimentForm';
@@ -14,9 +14,11 @@ import SuperAdminDashboard from './components/superadmin/SuperAdminDashboard';
 import HowGemmaWorks from './components/HowGemmaWorks';
 import ErrorBoundary from './components/ErrorBoundary';
 import { analyzeCircuit } from './lib/api';
+import { ShieldAlert } from 'lucide-react';
 import './App.css';
 
 function MainApp() {
+  const { role, isAuthenticated, isSuperAdmin, isInstitutionAdmin, isInstructor, isSupabaseConfigured } = useAuth();
   const [currentView, setCurrentView] = useState('workbench'); // 'workbench' | 'student' | 'instructor' | 'institution_admin' | 'super_admin' | 'simulations'
   const [showGemmaModal, setShowGemmaModal] = useState(false);
 
@@ -216,7 +218,18 @@ function MainApp() {
         {currentView === 'instructor' && (
           <div className="portal-page-wrapper">
             <ErrorBoundary fallbackTitle="Instructor Portal">
-              <InstructorPortal />
+              {isSupabaseConfigured && isAuthenticated && !isInstructor ? (
+                <div className="card text-center p-8 max-w-lg mx-auto my-12 border-amber">
+                  <ShieldAlert size={40} className="text-amber mx-auto mb-3" />
+                  <h3 className="text-lg font-bold text-white mb-2">Restricted Area: Instructor Portal</h3>
+                  <p className="text-slate-400 text-sm mb-4">Your current role ({role}) does not have permission to access the instructor authoring portal.</p>
+                  <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('workbench')}>
+                    Return to Workbench
+                  </button>
+                </div>
+              ) : (
+                <InstructorPortal />
+              )}
             </ErrorBoundary>
           </div>
         )}
@@ -225,7 +238,18 @@ function MainApp() {
         {currentView === 'institution_admin' && (
           <div className="portal-page-wrapper">
             <ErrorBoundary fallbackTitle="Institution Admin Portal">
-              <InstitutionAdminDashboard />
+              {isSupabaseConfigured && isAuthenticated && !isInstitutionAdmin ? (
+                <div className="card text-center p-8 max-w-lg mx-auto my-12 border-amber">
+                  <ShieldAlert size={40} className="text-amber mx-auto mb-3" />
+                  <h3 className="text-lg font-bold text-white mb-2">Restricted Area: College Administration</h3>
+                  <p className="text-slate-400 text-sm mb-4">Your current role ({role}) does not have permission to manage institutional workspaces.</p>
+                  <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('workbench')}>
+                    Return to Workbench
+                  </button>
+                </div>
+              ) : (
+                <InstitutionAdminDashboard />
+              )}
             </ErrorBoundary>
           </div>
         )}
@@ -234,7 +258,18 @@ function MainApp() {
         {currentView === 'super_admin' && (
           <div className="portal-page-wrapper">
             <ErrorBoundary fallbackTitle="Platform Super Admin Governance">
-              <SuperAdminDashboard />
+              {isSupabaseConfigured && isAuthenticated && !isSuperAdmin ? (
+                <div className="card text-center p-8 max-w-lg mx-auto my-12 border-amber">
+                  <ShieldAlert size={40} className="text-amber mx-auto mb-3" />
+                  <h3 className="text-lg font-bold text-white mb-2">Restricted Area: Platform Super Admin</h3>
+                  <p className="text-slate-400 text-sm mb-4">Your current role ({role}) does not have permission to access the platform governance console.</p>
+                  <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('workbench')}>
+                    Return to Workbench
+                  </button>
+                </div>
+              ) : (
+                <SuperAdminDashboard />
+              )}
             </ErrorBoundary>
           </div>
         )}

@@ -5,7 +5,7 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
 
-export default function ImageUpload({ onImageChange, selectedImage, validationError }) {
+export default function ImageUpload({ onImageChange, selectedImage, validationError, required = false }) {
   const [dragActive, setDragActive] = useState(false);
   const [internalError, setInternalError] = useState(null);
   const fileInputRef = useRef(null);
@@ -117,7 +117,11 @@ export default function ImageUpload({ onImageChange, selectedImage, validationEr
     <div className="image-upload-wrapper">
       <div className="field-label-group">
         <label className="field-label" htmlFor="circuit-image-input">
-          Circuit Photograph <span className="required-mark" aria-hidden="true">*</span>
+          Circuit Photograph {required ? (
+            <span className="required-mark" aria-hidden="true">*</span>
+          ) : (
+            <span className="optional-tag">(Optional)</span>
+          )}
         </label>
         <span className="field-hint">JPEG, PNG, or WebP up to 10 MB</span>
       </div>

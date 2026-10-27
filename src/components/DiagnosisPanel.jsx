@@ -53,8 +53,11 @@ export default function DiagnosisPanel({ preparedExperiment, liveReport, isAnaly
         {liveReport && !isAnalyzing && (
           <div className="live-report-container">
             <div className="report-meta-banner">
+              <div className={`meta-badge ${liveReport.is_live_ai ? 'meta-badge-live' : 'meta-badge-fallback'}`}>
+                <Sparkles size={14} className={liveReport.is_live_ai ? "text-emerald" : "text-amber"} />
+                <span>Source: <strong>{liveReport.is_live_ai ? 'Live Gemma 4 AI' : 'Offline Heuristic Fallback'}</strong></span>
+              </div>
               <div className="meta-badge">
-                <Sparkles size={14} className="text-blue" />
                 <span>Model: <strong>{liveReport.model_identifier}</strong></span>
               </div>
               <div className="meta-badge">

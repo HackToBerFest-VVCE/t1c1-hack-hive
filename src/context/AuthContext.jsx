@@ -7,13 +7,13 @@ const AuthContext = createContext(null);
 const DEFAULT_DEMO_STUDENT = {
   id: '00000000-0000-0000-0000-000000000001',
   email: 'alex.student@labsense.edu',
-  user_metadata: { full_name: 'Alex Morgan' },
+  user_metadata: { full_name: 'Darshan R' },
 };
 
 const DEFAULT_DEMO_STUDENT_PROFILE = {
   id: '00000000-0000-0000-0000-000000000001',
   email: 'alex.student@labsense.edu',
-  full_name: 'Alex Morgan',
+  full_name: 'Darshan R',
   role: 'student',
   avatar_url: null,
   institution: 'Vidyavardhaka College of Engineering',
@@ -31,7 +31,7 @@ const DEFAULT_DEMO_STUDENT_PROFILE = {
 const DEFAULT_DEMO_INSTRUCTOR_PROFILE = {
   id: '00000000-0000-0000-0000-000000000002',
   email: 'dr.sharma@labsense.edu',
-  full_name: 'Dr. K. S. Sharma',
+  full_name: 'Dr. Chethan M S',
   role: 'instructor',
   avatar_url: null,
   institution: 'Vidyavardhaka College of Engineering',
@@ -48,7 +48,7 @@ const DEFAULT_DEMO_INSTRUCTOR_PROFILE = {
 const DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE = {
   id: '00000000-0000-0000-0000-000000000003',
   email: 'admin.vvce@labsense.edu',
-  full_name: 'Prof. B. S. Gowda',
+  full_name: 'Prof. Chinmayi D A',
   role: 'institution_admin',
   avatar_url: null,
   institution: 'Vidyavardhaka College of Engineering',
@@ -64,7 +64,7 @@ const DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE = {
 const DEFAULT_DEMO_SUPER_ADMIN_PROFILE = {
   id: '00000000-0000-0000-0000-000000000004',
   email: 'superadmin@labsense.io',
-  full_name: 'Sarah Jenkins',
+  full_name: 'Harshith T S',
   role: 'platform_super_admin',
   avatar_url: null,
   institution: 'LabSense AI Platform Operations',
@@ -136,43 +136,120 @@ export function AuthProvider({ children }) {
   }, []);
 
   const fetchProfile = async (userId) => {
-    if (!isSupabaseConfigured || !supabase) return;
+    if (!isSupabaseConfigured || !supabase) return null;
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         setProfile(data);
+        return data;
       }
+
+      // Safe fallback from authenticated user metadata if profiles table is RLS-restricted
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user && userData.user.id === userId) {
+        const meta = userData.user.user_metadata || {};
+        const fallbackProfile = {
+          id: userData.user.id,
+          email: userData.user.email,
+          full_name: meta.full_name || (userData.user.email ? userData.user.email.split('@')[0] : 'Student'),
+          role: meta.role || 'student',
+          institution_id: meta.institution_id || '00000000-0000-0000-0000-000000000100',
+          institution_code: meta.institution_code || 'LSAI-VVCE-A7K2',
+          institution: meta.institution || 'Vidyavardhaka College of Engineering',
+          department: meta.department || 'Electronics & Communication Engineering',
+          usn: meta.usn || '4VV21EC042',
+          semester: meta.semester || '6th Semester',
+          status: 'active',
+        };
+        setProfile(fallbackProfile);
+        return fallbackProfile;
+      }
+      return null;
     } catch (err) {
       console.warn('Profile fetch warning:', err);
+      return null;
     }
   };
 
   // Student or Instructor Sign Up
-  const signUp = async (email, password, fullName, targetRole = 'student', institutionCode = '') => {
+  const signUp = async (email, password, fullName, targetRole = 'student', institutionCode = '', idNumber = '') => {
     setAuthError(null);
     setLoading(true);
     try {
+      const codeUpper = (institutionCode || '').trim().toUpperCase();
+
       if (isSupabaseConfigured && supabase) {
+        // 1. Validate institution code against registered approved institutions
+        let institutionId = null;
+        let institutionName = 'Vidyavardhaka College of Engineering';
+
+        if (codeUpper) {
+          const { data: inst, error: instErr } = await supabase
+            .from('institutions')
+            .select('id, name, code, status, is_active')
+            .eq('code', codeUpper)
+            .eq('status', 'approved')
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (instErr || !inst) {
+            throw new Error(`Invalid or unapproved institution code "${codeUpper}". Please verify with your college coordinator.`);
+          }
+          institutionId = inst.id;
+          institutionName = inst.name;
+        }
+
+        // 2. Real Supabase Auth signUp
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: email.trim(),
           password,
           options: {
-            data: { full_name: fullName, role: targetRole, institution_code: institutionCode },
+            data: {
+              full_name: fullName.trim(),
+              role: targetRole,
+              institution_code: codeUpper,
+              institution_id: institutionId,
+              institution: institutionName,
+              usn: targetRole === 'student' ? (idNumber || '').trim() : undefined,
+              staff_id: targetRole === 'instructor' ? (idNumber || '').trim() : undefined,
+            },
           },
         });
+
         if (error) throw error;
-        return { success: true, user: data.user };
+
+        // Check if an existing account with identities exists
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          throw new Error('An account with this email address already exists. Please log in instead.');
+        }
+
+        const needsEmailConfirmation = Boolean(data.user && !data.session && !data.user.confirmed_at);
+
+        let fetchedP = null;
+        if (data.session && data.user) {
+          setUser(data.user);
+          fetchedP = await fetchProfile(data.user.id);
+        }
+
+        return {
+          success: true,
+          user: data.user,
+          session: data.session,
+          profile: fetchedP,
+          needsEmailConfirmation,
+          institutionName,
+        };
       } else {
         // Local demonstration mode registration
         const newDemo = {
           id: `local-${Date.now()}`,
           email,
-          user_metadata: { full_name: fullName, role: targetRole, institution_code: institutionCode },
+          user_metadata: { full_name: fullName, role: targetRole, institution_code: codeUpper },
         };
         const newProfile = {
           id: newDemo.id,
@@ -180,14 +257,14 @@ export function AuthProvider({ children }) {
           full_name: fullName,
           role: targetRole,
           institution: 'Vidyavardhaka College of Engineering',
-          institution_code: institutionCode || 'LSAI-VVCE-A7K2',
+          institution_code: codeUpper || 'LSAI-VVCE-A7K2',
           department: 'Electronics & Communication Engineering',
           ...(targetRole === 'student' ? {
-            usn: '4VV21EC099',
+            usn: idNumber || '4VV21EC042',
             semester: '6th Semester',
             enrolled_subjects: ['Analog Electronics Lab (21EC32)', 'Digital System Design Lab (21EC33)']
           } : {
-            staff_id: 'VVCE-FAC-NEW',
+            staff_id: idNumber || 'VVCE-FAC-NEW',
             designation: 'Assistant Professor (Pending Verification)',
             assigned_subjects: ['Analog Electronics Lab (21EC32)']
           })
@@ -199,7 +276,7 @@ export function AuthProvider({ children }) {
         } catch (e) {
           console.warn('Storage save warning:', e);
         }
-        return { success: true, user: newDemo };
+        return { success: true, user: newDemo, profile: newProfile, needsEmailConfirmation: false };
       }
     } catch (err) {
       setAuthError(err.message);
@@ -214,29 +291,35 @@ export function AuthProvider({ children }) {
     setAuthError(null);
     setLoading(true);
     try {
+      const trimmedEmail = email.trim();
       if (isSupabaseConfigured && supabase) {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: trimmedEmail,
           password,
         });
+
         if (error) throw error;
-        setUser(data.user);
-        await fetchProfile(data.user.id);
-        return { success: true };
+
+        if (data.user) {
+          setUser(data.user);
+          const fetchedP = await fetchProfile(data.user.id);
+          return { success: true, user: data.user, session: data.session, profile: fetchedP };
+        }
+        return { success: false, error: 'Authentication failed. No user returned.' };
       } else {
         // Local mode demo login
         const em = email.toLowerCase();
         let targetUser = null;
         let targetProfile = null;
 
-        if (em.includes('super') || em.includes('sarah') || em.includes('platform')) {
-          targetUser = { id: DEFAULT_DEMO_SUPER_ADMIN_PROFILE.id, email, user_metadata: { full_name: 'Sarah Jenkins' } };
+        if (em.includes('super') || em.includes('sarah') || em.includes('harshith') || em.includes('platform')) {
+          targetUser = { id: DEFAULT_DEMO_SUPER_ADMIN_PROFILE.id, email, user_metadata: { full_name: 'Harshith T S' } };
           targetProfile = DEFAULT_DEMO_SUPER_ADMIN_PROFILE;
-        } else if (em.includes('admin') || em.includes('gowda') || em.includes('dean') || em.includes('principal')) {
-          targetUser = { id: DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE.id, email, user_metadata: { full_name: 'Prof. B. S. Gowda' } };
+        } else if (em.includes('admin') || em.includes('gowda') || em.includes('chinmayi') || em.includes('dean') || em.includes('principal')) {
+          targetUser = { id: DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE.id, email, user_metadata: { full_name: 'Prof. Chinmayi D A' } };
           targetProfile = DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE;
-        } else if (em.includes('instructor') || em.includes('sharma') || em.includes('faculty')) {
-          targetUser = { id: DEFAULT_DEMO_INSTRUCTOR_PROFILE.id, email, user_metadata: { full_name: 'Dr. K. S. Sharma' } };
+        } else if (em.includes('instructor') || em.includes('sharma') || em.includes('chethan') || em.includes('faculty')) {
+          targetUser = { id: DEFAULT_DEMO_INSTRUCTOR_PROFILE.id, email, user_metadata: { full_name: 'Dr. Chethan M S' } };
           targetProfile = DEFAULT_DEMO_INSTRUCTOR_PROFILE;
         } else {
           targetUser = { ...DEFAULT_DEMO_STUDENT, email };
@@ -320,13 +403,13 @@ export function AuthProvider({ children }) {
     let targetProfile = null;
 
     if (targetRole === 'platform_super_admin' || targetRole === 'super_admin') {
-      targetUser = { id: DEFAULT_DEMO_SUPER_ADMIN_PROFILE.id, email: 'superadmin@labsense.io', user_metadata: { full_name: 'Sarah Jenkins' } };
+      targetUser = { id: DEFAULT_DEMO_SUPER_ADMIN_PROFILE.id, email: 'superadmin@labsense.io', user_metadata: { full_name: 'Harshith T S' } };
       targetProfile = DEFAULT_DEMO_SUPER_ADMIN_PROFILE;
     } else if (targetRole === 'institution_admin' || targetRole === 'admin') {
-      targetUser = { id: DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE.id, email: 'admin.vvce@labsense.edu', user_metadata: { full_name: 'Prof. B. S. Gowda' } };
+      targetUser = { id: DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE.id, email: 'admin.vvce@labsense.edu', user_metadata: { full_name: 'Prof. Chinmayi D A' } };
       targetProfile = DEFAULT_DEMO_INSTITUTION_ADMIN_PROFILE;
     } else if (targetRole === 'instructor') {
-      targetUser = { id: DEFAULT_DEMO_INSTRUCTOR_PROFILE.id, email: 'dr.sharma@labsense.edu', user_metadata: { full_name: 'Dr. K. S. Sharma' } };
+      targetUser = { id: DEFAULT_DEMO_INSTRUCTOR_PROFILE.id, email: 'dr.sharma@labsense.edu', user_metadata: { full_name: 'Dr. Chethan M S' } };
       targetProfile = DEFAULT_DEMO_INSTRUCTOR_PROFILE;
     } else {
       targetUser = DEFAULT_DEMO_STUDENT;

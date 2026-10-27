@@ -18,7 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function StudentProgress({ onNavigateTab }) {
   const { profile } = useAuth();
 
-  const studentName = profile?.full_name || 'Alex Morgan';
+  const studentName = profile?.full_name || 'Darshan R';
 
   const completedExperiments = [
     {
@@ -71,7 +71,7 @@ export default function StudentProgress({ onNavigateTab }) {
       category: 'Hardware Inquiry',
       submittedAt: 'Today at 14:15',
       status: 'Under Review',
-      instructor: 'Dr. Sharma',
+      instructor: 'Dr. Chethan M S',
     },
   ];
 

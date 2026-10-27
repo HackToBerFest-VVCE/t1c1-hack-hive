@@ -47,3 +47,6 @@ __pycache__/
 *$py.class
 *.pyc
 .pytest_cache/
+
+# Scratch & local testing scripts
+scratch/

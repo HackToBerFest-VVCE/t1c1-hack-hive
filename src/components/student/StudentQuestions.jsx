@@ -22,9 +22,9 @@ const INITIAL_STUDENT_QUESTIONS = [
     replies: [
       {
         id: 'r-1',
-        author_name: 'Dr. K. S. Sharma',
+        author_name: 'Dr. Chethan M S',
         author_role: 'instructor',
-        content: 'Hi Alex! Remember Kirchhoff\'s Voltage Law (KVL): the sum of voltages around the loop must equal the supply voltage. The remaining ~1.88V is dropped across your forward-biased LED junction! 3.12V + 1.88V = 5.0V.',
+        content: 'Hi Darshan! Remember Kirchhoff\'s Voltage Law (KVL): the sum of voltages around the loop must equal the supply voltage. The remaining ~1.88V is dropped across your forward-biased LED junction! 3.12V + 1.88V = 5.0V.',
         is_ai_drafted: true,
         created_at: 'Today, 2:24 PM',
       },
@@ -81,7 +81,7 @@ export default function StudentQuestions() {
 
     const newReply = {
       id: `r-${Date.now()}`,
-      author_name: 'Alex Morgan',
+      author_name: 'Darshan R',
       author_role: 'student',
       content: replyText.trim(),
       is_ai_drafted: false,
@@ -243,7 +243,7 @@ export default function StudentQuestions() {
                 <div className="message-header">
                   <div className="author-info">
                     <User size={16} className="text-blue" />
-                    <strong>Alex Morgan (Student)</strong>
+                    <strong>Darshan R (Student)</strong>
                   </div>
                   <span className="message-time">{selectedQuestion.created_at}</span>
                 </div>

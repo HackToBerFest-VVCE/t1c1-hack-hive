@@ -43,7 +43,7 @@ export default function InstitutionAdminDashboard() {
   const [instructors, setInstructors] = useState([
     {
       id: 'fac-01',
-      name: 'Dr. K. S. Sharma',
+      name: 'Dr. Chethan M S',
       staffId: 'VVCE-FAC-ECE-108',
       designation: 'Associate Professor & Lab Coordinator',
       email: 'dr.sharma@labsense.edu',
@@ -102,7 +102,7 @@ export default function InstitutionAdminDashboard() {
   const [students, setStudents] = useState([
     {
       id: 'std-01',
-      name: 'Alex Morgan',
+      name: 'Darshan R',
       usn: '4VV21EC042',
       semester: '6th Semester',
       section: 'A',
@@ -175,7 +175,7 @@ export default function InstitutionAdminDashboard() {
       name: 'Analog Electronics Laboratory',
       semester: '3rd Semester',
       department: 'ECE',
-      leadInstructor: 'Dr. K. S. Sharma',
+      leadInstructor: 'Dr. Chethan M S',
       coInstructors: ['Prof. Deepa Nayak', 'Prof. Harish Kumar'],
       experimentCount: 12,
       enrolledStudents: 168,
@@ -186,7 +186,7 @@ export default function InstitutionAdminDashboard() {
       name: 'Digital System Design Laboratory',
       semester: '3rd Semester',
       department: 'ECE',
-      leadInstructor: 'Dr. K. S. Sharma',
+      leadInstructor: 'Dr. Chethan M S',
       coInstructors: [],
       experimentCount: 10,
       enrolledStudents: 168,
@@ -292,7 +292,7 @@ export default function InstitutionAdminDashboard() {
               <span className="inst-badge-primary">College Admin Console</span>
             </div>
             <p className="banner-inst-dept">
-              Department of Electronics & Communication Engineering • Mysore, Karnataka • Administrator: <strong>{profile?.full_name || 'Prof. B. S. Gowda'}</strong>
+              Department of Electronics & Communication Engineering • Mysore, Karnataka • Administrator: <strong>{profile?.full_name || 'Prof. Chinmayi D A'}</strong>
             </p>
           </div>
         </div>

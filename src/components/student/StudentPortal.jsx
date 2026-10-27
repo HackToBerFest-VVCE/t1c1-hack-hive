@@ -39,7 +39,7 @@ export default function StudentPortal({ initialTab = 'troubleshoot' }) {
           </div>
           <div>
             <div className="scope-title-row">
-              <span className="student-name">{profile?.full_name || 'Alex Morgan'}</span>
+              <span className="student-name">{profile?.full_name || 'Darshan R'}</span>
               <span className="student-usn-pill">{profile?.usn || '4VV21EC042'}</span>
               <span className="student-sem-pill">{profile?.semester || '6th Semester'}</span>
             </div>

@@ -60,9 +60,6 @@ export default function StudentTroubleshoot() {
   // Validation
   const validateForm = () => {
     const errs = {};
-    if (!circuitImage) {
-      errs.circuitImage = 'A circuit photograph is required for multimodal visual inspection.';
-    }
     if (!problemDescription.trim() || problemDescription.trim().length < 10) {
       errs.problemDescription = 'Please describe the fault or symptom (minimum 10 characters).';
     }
@@ -114,77 +111,9 @@ export default function StudentTroubleshoot() {
       const result = await analyzeCircuit(payload);
       setReport(result);
     } catch (err) {
-      console.warn('Backend unavailable, generating local structured report:', err);
-      const vSupp = supplyVoltage ? parseFloat(supplyVoltage) : 5.0;
-      const vMeas = measuredVoltage ? parseFloat(measuredVoltage) : 0.04;
-      const iMeas = measuredCurrent ? parseFloat(measuredCurrent) : 0.0;
-
-      setReport({
-        circuit_observations: `Inspected physical ${experimentType} setup. Checked jumper seating, terminal connections, and bench telemetry (Supply: ${vSupp}V, Node: ${vMeas}V, Current: ${iMeas}mA).`,
-        potential_faults: [
-          {
-            fault: 'Reversed Semiconductor Polarity or Open Circuit',
-            likelihood: 'High',
-            evidence: `Measured voltage across device (${vMeas}V) is below conduction threshold with ${iMeas}mA current.`
-          },
-          {
-            fault: 'Breadboard Central Split Power Rail Not Bridged',
-            likelihood: 'Medium',
-            evidence: 'Breadboard power buses frequently break at the center divider unless jumpered.'
-          },
-          {
-            fault: 'Defective Series Current-Limiting Resistor',
-            likelihood: 'Low',
-            evidence: 'Resistor may have open-circuited under prior electrical overstress.'
-          },
-        ],
-        supporting_evidence: [
-          `Reported symptom matches typical non-conducting junction impedance.`,
-          `Node voltage (${vMeas}V) under ${vSupp}V supply indicates open circuit or reverse bias.`
-        ],
-        missing_information: [
-          'Close-up photo of component cathode flat edge or polarity marking.',
-          'Resistor 4-band / 5-band color code verification photo.'
-        ],
-        verification_tests: [
-          {
-            step: 1,
-            test_description: 'Verify Supply Voltage with Multimeter',
-            probe_points: '+Rail to GND Rail',
-            expected_nominal: `${vSupp}V DC ± 5%`,
-            safety_rule: 'Ensure meter leads are in Volts input jack, not 10A current jack.'
-          },
-          {
-            step: 2,
-            test_description: 'Multimeter Diode Test Mode',
-            probe_points: 'Red probe to Anode, Black to Cathode (circuit powered OFF)',
-            expected_nominal: '1.8V - 2.1V forward drop; OL in reverse',
-            safety_rule: 'Turn off bench supply before performing diode test.'
-          },
-          {
-            step: 3,
-            test_description: 'Breadboard Continuity Check',
-            probe_points: 'Across breadboard center split',
-            expected_nominal: '< 5 Ohms',
-            safety_rule: 'Test only on de-energized hardware.'
-          }
-        ],
-        expected_observations: 'Once polarity is corrected, component should conduct normally with nominal forward drop (~1.9V) and ~14mA current.',
-        corrective_steps: [
-          'Turn off bench DC power supply immediately.',
-          'Verify orientation of component leads (anode longer lead vs cathode flat side).',
-          'Reverse component orientation on the breadboard.',
-          'Re-energize supply at low voltage before stepping up to nominal 5.0V.'
-        ],
-        safety_precautions: [
-          'CAUTION: Never connect LEDs across voltage supplies without series current-limiting resistors.',
-          'Feel resistors for excessive heating before touching leads by hand.'
-        ],
-        concepts_explained: "Diodes conduct current exponentially only when forward-biased above threshold knee voltage (~1.8V). Current-limiting resistors provide negative feedback, setting I = (V_in - V_f) / R.",
-        uncertainty_level: 'Moderate (Local Diagnostic Engine — Backend Disconnected)',
-        is_live_ai: false,
-        model_identifier: 'gemma-4-31b-it (Local Diagnostic Engine — Backend Disconnected)'
-      });
+      console.error('Diagnosis failed:', err);
+      setAnalysisError(err.message || 'Diagnostic request failed. Please check the backend connection and try again.');
+      setReport(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -203,7 +132,7 @@ export default function StudentTroubleshoot() {
       const payload = {
         experiment_type: experimentType,
         problem_description: problemDescription,
-        initial_report_summary: report.circuit_observations,
+        initial_report_summary: report?.circuit_observations || 'Circuit bench troubleshooting report',
         student_question: userMsg,
         previous_messages: chatHistory.map((m) => ({
           role: m.sender === 'user' ? 'user' : 'assistant',
@@ -217,13 +146,18 @@ export default function StudentTroubleshoot() {
         {
           sender: 'assistant',
           text: reply.reply,
-          suggestedChecks: reply.suggested_next_checks,
+          suggestedChecks: reply.suggested_next_checks || [],
+          model: reply.model_identifier,
         },
       ]);
     } catch (err) {
       setChatHistory((prev) => [
         ...prev,
-        { sender: 'assistant', text: `Sorry, could not process follow-up: ${err.message}` },
+        {
+          sender: 'assistant',
+          isError: true,
+          text: `Inference error: ${err.message || 'Unable to reach Gemma 4 tutor. Please retry.'}`,
+        },
       ]);
     } finally {
       setIsSendingFollowUp(false);
@@ -547,8 +481,11 @@ export default function StudentTroubleshoot() {
               <div className="report-container">
                 {/* AI Model Badge */}
                 <div className="report-meta-banner">
+                  <div className={`meta-badge ${report.is_live_ai ? 'meta-badge-live' : 'meta-badge-fallback'}`}>
+                    <Sparkles size={14} className={report.is_live_ai ? "text-emerald" : "text-amber"} />
+                    <span>Source: <strong>{report.is_live_ai ? 'Live Gemma 4 AI' : 'Offline Heuristic Fallback'}</strong></span>
+                  </div>
                   <div className="meta-badge">
-                    <Sparkles size={14} className="text-blue" />
                     <span>Intelligence: <strong>{report.model_identifier}</strong></span>
                   </div>
                   <div className="meta-badge">
@@ -722,15 +659,15 @@ export default function StudentTroubleshoot() {
                   </div>
 
                   {/* Chat Conversation Stream */}
-                  {chatHistory.length > 0 && (
+                  {(chatHistory.length > 0 || isSendingFollowUp) && (
                     <div className="chat-stream">
                       {chatHistory.map((msg, idx) => (
-                        <div key={idx} className={`chat-bubble chat-${msg.sender}`}>
+                        <div key={idx} className={`chat-bubble chat-${msg.sender} ${msg.isError ? 'chat-bubble-error' : ''}`}>
                           <div className="chat-bubble-author">
-                            {msg.sender === 'user' ? 'You' : 'Gemma 4 Tutor'}
+                            {msg.sender === 'user' ? 'You' : `Gemma 4 Tutor ${msg.model ? `(${msg.model})` : ''}`}
                           </div>
                           <p className="chat-bubble-text">{msg.text}</p>
-                          {msg.suggestedChecks && (
+                          {msg.suggestedChecks && msg.suggestedChecks.length > 0 && (
                             <ul className="chat-checks">
                               {msg.suggestedChecks.map((sc, i) => (
                                 <li key={i}>• {sc}</li>
@@ -739,6 +676,16 @@ export default function StudentTroubleshoot() {
                           )}
                         </div>
                       ))}
+
+                      {isSendingFollowUp && (
+                        <div className="chat-bubble chat-assistant chat-loading">
+                          <div className="chat-bubble-author">Gemma 4 Tutor</div>
+                          <div className="chat-loading-row">
+                            <Sparkles size={16} className="spin-icon text-cyan" />
+                            <span>Gemma 4 is analyzing your follow-up inquiry...</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
